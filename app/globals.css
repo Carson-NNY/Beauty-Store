@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 45% 96%;
+    --foreground: 25 24% 18%;
+    --card: 35 38% 99%;
+    --card-foreground: 25 24% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 24% 18%;
+    --primary: 152 37% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 32 42% 86%;
+    --secondary-foreground: 25 24% 18%;
+    --muted: 36 31% 91%;
+    --muted-foreground: 24 14% 38%;
+    --accent: 16 48% 48%;
+    --accent-foreground: 36 45% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 33 28% 84%;
+    --input: 33 28% 84%;
+    --ring: 152 37% 24%;
+    --radius: 0.5rem;
+    --font-sans: "Inter", "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-dvh bg-background font-sans text-foreground antialiased;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-4 ring-ring/30 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  .border-glow {
+    isolation: isolate;
+  }
+
+  .border-glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 18% 12%, rgb(216 184 121 / 0.42), transparent 26%),
+      radial-gradient(circle at 86% 74%, rgb(139 111 78 / 0.28), transparent 28%),
+      linear-gradient(135deg, rgb(216 184 121 / 0.36), rgb(255 255 255 / 0.08), rgb(243 224 184 / 0.26));
+    opacity: 0.58;
+  }
+
+  .border-glow::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(1.75rem - 1px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 0 38px rgb(216 184 121 / 0.12);
+    pointer-events: none;
+  }
+
+  @keyframes border-glow-breathe {
+    from {
+      opacity: 0.45;
+    }
+    to {
+      opacity: 0.82;
+    }
+  }
+
+  .border-glow--animated::before {
+    animation: border-glow-breathe 7s ease-in-out infinite alternate;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .border-glow::before {
+      animation: none;
+    }
+  }
+}
