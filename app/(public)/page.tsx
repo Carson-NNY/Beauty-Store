@@ -4,6 +4,7 @@ import { ContactPanel } from "@/components/customer/contact-panel";
 import { EditorialHero } from "@/components/customer/editorial-hero";
 import { MobileActionBar } from "@/components/customer/mobile-action-bar";
 import { ServiceCard } from "@/components/customer/service-card";
+import { ScrollReveal } from "@/components/effects/scroll-reveal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { customerServices, faqs, trustHighlights } from "@/lib/mock-data/customer";
@@ -15,24 +16,32 @@ export default function HomePage() {
     <main>
       <EditorialHero />
 
-      <section className="container space-y-5 py-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.1em] text-accent">Popular services</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-normal">Start with what you need today</h2>
+      <section className="bg-[#f4f1eb] py-14 sm:py-20">
+        <div className="container space-y-10">
+          <ScrollReveal className="flex items-end justify-between gap-4" y={20} durationMs={600}>
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent/80">Popular services</p>
+              <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+                Start with what you need today
+              </h2>
+            </div>
+            <Button asChild variant="outline" className="hidden rounded-full border-foreground/15 bg-transparent px-5 sm:inline-flex">
+              <Link href="/services">All services</Link>
+            </Button>
+          </ScrollReveal>
+          <div className="grid gap-y-14 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-3 lg:gap-x-12">
+            {previewServices.map((service, index) => (
+              <ScrollReveal key={service.id} delayMs={index * 100} y={28} durationMs={700}>
+                <ServiceCard service={service} />
+              </ScrollReveal>
+            ))}
           </div>
-          <Button asChild variant="outline" className="hidden sm:inline-flex">
-            <Link href="/services">All services</Link>
-          </Button>
+          <ScrollReveal delayMs={180} className="sm:hidden">
+            <Button asChild variant="outline" className="h-11 w-full rounded-full border-foreground/15 bg-transparent">
+              <Link href="/services">All services</Link>
+            </Button>
+          </ScrollReveal>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {previewServices.map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
-        </div>
-        <Button asChild variant="outline" className="w-full sm:hidden">
-          <Link href="/services">All services</Link>
-        </Button>
       </section>
 
       <section className="container grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-4">

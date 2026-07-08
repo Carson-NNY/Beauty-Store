@@ -1,149 +1,275 @@
 "use client";
 
-import { Renderer, Program, Mesh, Triangle, Color } from "ogl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Mesh, Program, Renderer, Triangle } from "ogl";
 import { cn } from "@/lib/utils";
 
+type Origin = "top-right" | "top-left" | "bottom-right" | "bottom-left";
+
 type SideRaysProps = {
-  className?: string;
-  origin?: "top-left" | "top-right";
+  speed?: number;
   rayColor1?: string;
   rayColor2?: string;
-  speed?: number;
   intensity?: number;
   spread?: number;
+  origin?: Origin;
+  tilt?: number;
   saturation?: number;
   blend?: number;
   falloff?: number;
   opacity?: number;
+  className?: string;
 };
 
-const vertex = /* glsl */ `
+const hexToRgb = (hex: string): [number, number, number] => {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return match
+    ? [parseInt(match[1], 16) / 255, parseInt(match[2], 16) / 255, parseInt(match[3], 16) / 255]
+    : [1, 1, 1];
+};
+
+const originToFlip = (origin: Origin): [number, number] => {
+  switch (origin) {
+    case "top-left":
+      return [1, 0];
+    case "bottom-right":
+      return [0, 1];
+    case "bottom-left":
+      return [1, 1];
+    default:
+      return [0, 0];
+  }
+};
+
+type SideRaysUniforms = Record<string, { value: number | number[] }>;
+
+const vertex = `
 attribute vec2 position;
-varying vec2 vUv;
-
 void main() {
-  vUv = position * 0.5 + 0.5;
   gl_Position = vec4(position, 0.0, 1.0);
-}
-`;
+}`;
 
-const fragment = /* glsl */ `
-precision highp float;
+const fragment = `precision highp float;
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform vec2 uOrigin;
-uniform vec3 uRayColor1;
-uniform vec3 uRayColor2;
-uniform float uIntensity;
-uniform float uSpread;
-uniform float uSaturation;
-uniform float uBlend;
-uniform float uFalloff;
-uniform float uOpacity;
-varying vec2 vUv;
+uniform float iTime;
+uniform vec2 iResolution;
+uniform float iSpeed;
+uniform vec3 iRayColor1;
+uniform vec3 iRayColor2;
+uniform float iIntensity;
+uniform float iSpread;
+uniform float iFlipX;
+uniform float iFlipY;
+uniform float iTilt;
+uniform float iSaturation;
+uniform float iBlend;
+uniform float iFalloff;
+uniform float iOpacity;
 
-float ray(vec2 uv, float angle, float width, float drift) {
-  vec2 direction = normalize(uv - uOrigin);
-  float angular = abs(atan(direction.y, direction.x) - angle);
-  angular = min(angular, 6.2831853 - angular);
-  float beam = smoothstep(width, 0.0, angular);
-  float distanceFromOrigin = length((uv - uOrigin) * vec2(uResolution.x / uResolution.y, 1.0));
-  float fade = exp(-distanceFromOrigin * uFalloff);
-  float shimmer = 0.84 + 0.16 * sin(uTime * 0.55 + drift + uv.y * 8.0);
-  return beam * fade * shimmer;
+float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord, float seedA, float seedB, float speed) {
+  vec2 sourceToCoord = coord - raySource;
+  float cosAngle = dot(normalize(sourceToCoord), rayRefDirection);
+  return clamp(
+    (0.45 + 0.15 * sin(cosAngle * seedA + iTime * speed)) +
+    (0.3 + 0.2 * cos(-cosAngle * seedB + iTime * speed)),
+    0.0, 1.0) *
+    clamp((iResolution.x - length(sourceToCoord)) / iResolution.x, 0.5, 1.0);
 }
 
 void main() {
-  vec2 uv = vUv;
-  float r1 = ray(uv, 2.46, 0.34 * uSpread, 0.0);
-  float r2 = ray(uv, 2.72, 0.22 * uSpread, 1.9);
-  float r3 = ray(uv, 2.18, 0.18 * uSpread, 3.4);
-  float strength = (r1 + r2 * 0.7 + r3 * 0.45) * uIntensity;
-  vec3 color = mix(uRayColor2, uRayColor1, clamp(r1 * uBlend + r2 * 0.35, 0.0, 1.0));
-  color = mix(vec3(dot(color, vec3(0.299, 0.587, 0.114))), color, uSaturation);
-  gl_FragColor = vec4(color, clamp(strength * uOpacity, 0.0, 0.62));
-}
-`;
+  vec2 fragCoord = gl_FragCoord.xy;
+  if (iFlipX > 0.5) fragCoord.x = iResolution.x - fragCoord.x;
+  if (iFlipY > 0.5) fragCoord.y = iResolution.y - fragCoord.y;
 
-export function SideRays({
-  className,
+  vec2 coord = vec2(fragCoord.x, iResolution.y - fragCoord.y);
+  vec2 rayPos = vec2(iResolution.x * 1.1, -0.5 * iResolution.y);
+
+  float tiltRad = iTilt * 3.14159265 / 180.0;
+  float cs = cos(tiltRad);
+  float sn = sin(tiltRad);
+  vec2 rel = coord - rayPos;
+  vec2 tiltedCoord = vec2(rel.x * cs - rel.y * sn, rel.x * sn + rel.y * cs) + rayPos;
+
+  float halfSpread = iSpread * 0.275;
+  vec2 rayRefDir1 = normalize(vec2(cos(0.785398 + halfSpread), sin(0.785398 + halfSpread)));
+  vec2 rayRefDir2 = normalize(vec2(cos(0.785398 - halfSpread), sin(0.785398 - halfSpread)));
+
+  vec4 rays1 = vec4(iRayColor1, 1.0) * rayStrength(rayPos, rayRefDir1, tiltedCoord, 36.2214, 21.11349, iSpeed);
+  vec4 rays2 = vec4(iRayColor2, 1.0) * rayStrength(rayPos, rayRefDir2, tiltedCoord, 22.3991, 18.0234, iSpeed * 0.2);
+
+  vec4 color = rays1 * (1.0 - iBlend) * 0.9 + rays2 * iBlend * 0.9;
+
+  float distanceToLight = length(fragCoord.xy - vec2(rayPos.x, iResolution.y - rayPos.y)) / iResolution.y;
+  float brightness = iIntensity * 0.4 / pow(max(distanceToLight, 0.001), iFalloff);
+  color.rgb *= brightness;
+
+  float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+  color.rgb = mix(vec3(gray), color.rgb, iSaturation);
+
+  color.a = max(color.r, max(color.g, color.b)) * iOpacity;
+  gl_FragColor = color;
+}`;
+
+export default function SideRays({
+  speed = 2.5,
+  rayColor1 = "#EAB308",
+  rayColor2 = "#96c8ff",
+  intensity = 2,
+  spread = 2,
   origin = "top-right",
-  rayColor1 = "#D8B879",
-  rayColor2 = "#8B6F4E",
-  speed = 0.45,
-  intensity = 1.4,
-  spread = 1.6,
-  saturation = 1.1,
-  blend = 0.55,
-  falloff = 1.4,
-  opacity = 0.45,
+  tilt = 0,
+  saturation = 1.5,
+  blend = 0.75,
+  falloff = 2,
+  opacity = 1,
+  className,
 }: SideRaysProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const uniformsRef = useRef<SideRaysUniforms | null>(null);
+  const rendererRef = useRef<Renderer | null>(null);
+  const animationIdRef = useRef<number | null>(null);
+  const meshRef = useRef<Mesh | null>(null);
+  const cleanupFunctionRef = useRef<(() => void) | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
+    if (!container) return;
 
-    const renderer = new Renderer({ alpha: true, antialias: false, dpr: Math.min(window.devicePixelRatio, 1.5) });
-    const gl = renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
-    container.appendChild(gl.canvas);
-
-    const geometry = new Triangle(gl);
-    const program = new Program(gl, {
-      vertex,
-      fragment,
-      transparent: true,
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: { value: [1, 1] },
-        uOrigin: { value: origin === "top-right" ? [0.92, 0.08] : [0.08, 0.08] },
-        uRayColor1: { value: new Color(rayColor1) },
-        uRayColor2: { value: new Color(rayColor2) },
-        uIntensity: { value: intensity },
-        uSpread: { value: spread },
-        uSaturation: { value: saturation },
-        uBlend: { value: blend },
-        uFalloff: { value: falloff },
-        uOpacity: { value: opacity },
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        setIsVisible(entries[0]?.isIntersecting ?? false);
       },
-    });
-    const mesh = new Mesh(gl, { geometry, program });
+      { threshold: 0.1 },
+    );
 
-    let frameId = 0;
-    const resize = () => {
-      const width = Math.max(container.clientWidth, 1);
-      const height = Math.max(container.clientHeight, 1);
-      renderer.setSize(width, height);
-      program.uniforms.uResolution.value = [width, height];
-    };
-
-    const render = (time: number) => {
-      program.uniforms.uTime.value = time * 0.001 * speed;
-      renderer.render({ scene: mesh });
-      frameId = requestAnimationFrame(render);
-    };
-
-    resize();
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(container);
-    frameId = requestAnimationFrame(render);
+    observerRef.current.observe(container);
 
     return () => {
-      cancelAnimationFrame(frameId);
-      resizeObserver.disconnect();
-      gl.canvas.remove();
+      observerRef.current?.disconnect();
+      observerRef.current = null;
     };
-  }, [blend, falloff, intensity, opacity, origin, rayColor1, rayColor2, saturation, speed, spread]);
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!isVisible || !container || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    cleanupFunctionRef.current?.();
+    cleanupFunctionRef.current = null;
+
+    const initializeWebGL = async () => {
+      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+      if (!containerRef.current) return;
+
+      const renderer = new Renderer({
+        dpr: Math.min(window.devicePixelRatio, 2),
+        alpha: true,
+      });
+      rendererRef.current = renderer;
+
+      const gl = renderer.gl;
+      gl.canvas.style.width = "100%";
+      gl.canvas.style.height = "100%";
+
+      while (containerRef.current.firstChild) {
+        containerRef.current.removeChild(containerRef.current.firstChild);
+      }
+      containerRef.current.appendChild(gl.canvas);
+
+      const [flipX, flipY] = originToFlip(origin);
+      const uniforms: SideRaysUniforms = {
+        iTime: { value: 0 },
+        iResolution: { value: [1, 1] },
+        iSpeed: { value: speed },
+        iRayColor1: { value: hexToRgb(rayColor1) },
+        iRayColor2: { value: hexToRgb(rayColor2) },
+        iIntensity: { value: intensity },
+        iSpread: { value: spread },
+        iFlipX: { value: flipX },
+        iFlipY: { value: flipY },
+        iTilt: { value: tilt },
+        iSaturation: { value: saturation },
+        iBlend: { value: blend },
+        iFalloff: { value: falloff },
+        iOpacity: { value: opacity },
+      };
+      uniformsRef.current = uniforms;
+
+      const geometry = new Triangle(gl);
+      const program = new Program(gl, { vertex, fragment, uniforms });
+      const mesh = new Mesh(gl, { geometry, program });
+      meshRef.current = mesh;
+
+      const updateSize = () => {
+        if (!containerRef.current || !renderer) return;
+        renderer.dpr = Math.min(window.devicePixelRatio, 2);
+        const { clientWidth: width, clientHeight: height } = containerRef.current;
+        renderer.setSize(width, height);
+        uniforms.iResolution.value = [width * renderer.dpr, height * renderer.dpr];
+      };
+
+      const loop = (time: number) => {
+        if (!rendererRef.current || !uniformsRef.current || !meshRef.current) return;
+        uniforms.iTime.value = time * 0.001;
+        renderer.render({ scene: mesh });
+        animationIdRef.current = requestAnimationFrame(loop);
+      };
+
+      window.addEventListener("resize", updateSize);
+      updateSize();
+      animationIdRef.current = requestAnimationFrame(loop);
+
+      cleanupFunctionRef.current = () => {
+        if (animationIdRef.current) {
+          cancelAnimationFrame(animationIdRef.current);
+          animationIdRef.current = null;
+        }
+        window.removeEventListener("resize", updateSize);
+        try {
+          const loseContext = renderer.gl.getExtension("WEBGL_lose_context");
+          loseContext?.loseContext();
+          renderer.gl.canvas.remove();
+        } catch {
+          renderer.gl.canvas.remove();
+        }
+        rendererRef.current = null;
+        uniformsRef.current = null;
+        meshRef.current = null;
+      };
+    };
+
+    initializeWebGL();
+
+    return () => {
+      cleanupFunctionRef.current?.();
+      cleanupFunctionRef.current = null;
+    };
+  }, [blend, falloff, intensity, isVisible, opacity, origin, rayColor1, rayColor2, saturation, speed, spread, tilt]);
+
+  useEffect(() => {
+    const uniforms = uniformsRef.current;
+    if (!uniforms) return;
+    const [flipX, flipY] = originToFlip(origin);
+    uniforms.iSpeed.value = speed;
+    uniforms.iRayColor1.value = hexToRgb(rayColor1);
+    uniforms.iRayColor2.value = hexToRgb(rayColor2);
+    uniforms.iIntensity.value = intensity;
+    uniforms.iSpread.value = spread;
+    uniforms.iFlipX.value = flipX;
+    uniforms.iFlipY.value = flipY;
+    uniforms.iTilt.value = tilt;
+    uniforms.iSaturation.value = saturation;
+    uniforms.iBlend.value = blend;
+    uniforms.iFalloff.value = falloff;
+    uniforms.iOpacity.value = opacity;
+  }, [blend, falloff, intensity, opacity, origin, rayColor1, rayColor2, saturation, speed, spread, tilt]);
 
   return (
     <div
       ref={containerRef}
-      className={cn("side-rays pointer-events-none absolute inset-0 z-[4] h-full w-full overflow-hidden", className)}
+      className={cn("side-rays relative h-full w-full overflow-hidden pointer-events-none", className)}
       aria-hidden="true"
     />
   );
