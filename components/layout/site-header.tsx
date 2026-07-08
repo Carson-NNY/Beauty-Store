@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Home, Menu, Phone, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Home, MapPin, Menu, Phone, Sparkles, X } from "lucide-react";
 import { useState } from "react";
+import { NavDock } from "@/components/layout/nav-dock";
 import { Button } from "@/components/ui/button";
 import { businessProfile } from "@/lib/mock-data/customer";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/services", label: "Services" },
-  { href: "/contact", label: "Contact" },
+const dockItems = [
+  { href: "/", label: "Home", icon: Home },
+  { href: "/services", label: "Services", icon: Sparkles },
+  { href: "/contact", label: "Contact", icon: MapPin },
+  { href: `tel:${businessProfile.phone}`, label: "Call", icon: Phone, external: true },
 ];
 
 const menuGroups = [
@@ -57,16 +59,7 @@ export function SiteHeader() {
           </span>
           <span>{businessProfile.name}</span>
         </Link>
-        <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
-          {navItems.map((item) => (
-            <Button key={item.href} asChild variant="ghost">
-              <Link href={item.href}>{item.label}</Link>
-            </Button>
-          ))}
-          <Button asChild variant="ghost">
-            <a href={`tel:${businessProfile.phone}`}>Call</a>
-          </Button>
-        </nav>
+        <NavDock items={dockItems} />
         <Button asChild className="hidden sm:inline-flex">
           <Link href="/book">Book now</Link>
         </Button>

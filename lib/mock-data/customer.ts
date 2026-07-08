@@ -75,6 +75,29 @@ export const customerServices: CustomerService[] = [
   },
 ];
 
+export const workShowcaseItems = [
+  {
+    image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1000&q=80",
+    text: "Glow Facial",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1000&q=80",
+    text: "Deep Cleanse",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1000&q=80",
+    text: "Massage Care",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1000&q=80",
+    text: "Bodywork",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1596178060810-72f53ce9a65c?auto=format&fit=crop&w=1000&q=80",
+    text: "Neck Reset",
+  },
+];
+
 export const bookingDates = [
   { value: "2026-07-08", label: "Wed, Jul 8" },
   { value: "2026-07-09", label: "Thu, Jul 9" },

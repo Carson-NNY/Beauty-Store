@@ -4,10 +4,11 @@ import { ContactPanel } from "@/components/customer/contact-panel";
 import { EditorialHero } from "@/components/customer/editorial-hero";
 import { MobileActionBar } from "@/components/customer/mobile-action-bar";
 import { ServiceCard } from "@/components/customer/service-card";
+import CircularGallery from "@/components/effects/circular-gallery";
 import { ScrollReveal } from "@/components/effects/scroll-reveal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { customerServices, faqs, trustHighlights } from "@/lib/mock-data/customer";
+import { customerServices, faqs, trustHighlights, workShowcaseItems } from "@/lib/mock-data/customer";
 
 const previewServices = customerServices.slice(0, 3);
 
@@ -15,6 +16,34 @@ export default function HomePage() {
   return (
     <main>
       <EditorialHero />
+
+      <section className="overflow-hidden bg-[#090806] py-14 text-[#f8f1e8] sm:py-20">
+        <div className="container space-y-8">
+          <ScrollReveal className="grid gap-4 lg:grid-cols-[0.82fr_1fr] lg:items-end" y={20} durationMs={600}>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d8b879]">Our work</p>
+              <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+                Treatment moments, softly showcased
+              </h2>
+            </div>
+            <p className="max-w-2xl text-base leading-8 text-[#c9bbaa] lg:justify-self-end">
+              A placeholder visual gallery for finished looks, calming rooms, and signature care details. Images and labels can be
+              replaced when the real business media is ready.
+            </p>
+          </ScrollReveal>
+        </div>
+        <div className="relative mt-8 h-[420px] sm:h-[560px]">
+          <CircularGallery
+            items={workShowcaseItems}
+            bend={1}
+            textColor="#ffffff"
+            borderRadius={0.05}
+            scrollEase={0.05}
+            font='600 30px Georgia, "Times New Roman", serif'
+            scrollSpeed={2}
+          />
+        </div>
+      </section>
 
       <section className="bg-[#f4f1eb] py-14 sm:py-20">
         <div className="container space-y-10">
