@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { LanguageProvider } from "@/components/i18n/language-provider";
 
 export default function PublicLayout({
   children,
@@ -7,10 +8,12 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-dvh">
-      <SiteHeader />
-      {children}
-      <SiteFooter />
-    </div>
+    <LanguageProvider>
+      <div className="min-h-dvh">
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </div>
+    </LanguageProvider>
   );
 }

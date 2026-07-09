@@ -1,11 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, DollarSign } from "lucide-react";
+import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
+import { getServiceCategoryLabel } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { CustomerService } from "@/lib/mock-data/customer";
 
 export function ServiceCard({ service, featured = false }: { service: CustomerService; featured?: boolean }) {
+  const { language, t } = useLanguage();
+
   return (
     <article className={cn("group/service", featured && "md:grid md:grid-cols-[1.05fr_0.95fr] md:gap-8 lg:gap-12")}>
       <div className="reveal-image overflow-hidden rounded-[1.1rem] bg-stone-200/50">
@@ -23,7 +29,9 @@ export function ServiceCard({ service, featured = false }: { service: CustomerSe
 
       <div className={cn("reveal-text space-y-4 pt-5", featured && "md:flex md:flex-col md:justify-center md:pt-0")}>
         <div className="space-y-3">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-accent/80">{service.category}</p>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-accent/80">
+            {getServiceCategoryLabel(service.category, language)}
+          </p>
           <h2 className="font-serif text-2xl font-semibold leading-tight tracking-normal text-foreground sm:text-3xl">
             {service.name}
           </h2>
@@ -46,7 +54,7 @@ export function ServiceCard({ service, featured = false }: { service: CustomerSe
           size="sm"
           className="mt-1 h-11 w-fit rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <Link href={`/book?service=${service.id}`}>Book</Link>
+          <Link href={`/book?service=${service.id}`}>{t.common.book}</Link>
         </Button>
       </div>
     </article>

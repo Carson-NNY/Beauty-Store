@@ -1,54 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Home, MapPin, Menu, Phone, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Home, Menu, Phone, Sparkles, X } from "lucide-react";
 import { useState } from "react";
-import { NavDock } from "@/components/layout/nav-dock";
+import { LanguageToggle } from "@/components/i18n/language-toggle";
+import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
-import { businessProfile } from "@/lib/mock-data/customer";
-
-const dockItems = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/services", label: "Services", icon: Sparkles },
-  { href: "/contact", label: "Contact", icon: MapPin },
-  { href: `tel:${businessProfile.phone}`, label: "Call", icon: Phone, external: true },
-];
-
-const menuGroups = [
-  {
-    label: "Visit",
-    bgColor: "#1f3028",
-    textColor: "#fffaf3",
-    icon: Home,
-    links: [
-      { href: "/", label: "Home", ariaLabel: "Go to home page" },
-      { href: "/contact", label: "Contact", ariaLabel: "Go to contact page" },
-    ],
-  },
-  {
-    label: "Care",
-    bgColor: "#352820",
-    textColor: "#fffaf3",
-    icon: Sparkles,
-    links: [
-      { href: "/services", label: "All services", ariaLabel: "View all services" },
-      { href: "/book", label: "Book now", ariaLabel: "Start booking an appointment" },
-    ],
-  },
-  {
-    label: "Connect",
-    bgColor: "#28222c",
-    textColor: "#fffaf3",
-    icon: Phone,
-    links: [
-      { href: `tel:${businessProfile.phone}`, label: "Call studio", ariaLabel: "Call the studio" },
-      { href: "/book/confirmation", label: "Confirmation", ariaLabel: "View appointment confirmation placeholder" },
-    ],
-  },
-];
+import { getBusinessProfile } from "@/lib/i18n";
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { language, t } = useLanguage();
+  const businessProfile = getBusinessProfile(language);
+  const navItems = [
+    { href: "/", label: t.nav.home },
+    { href: "/services", label: t.nav.services },
+    { href: "/contact", label: t.nav.contact },
+  ];
+  const menuGroups = [
+    {
+      label: t.nav.visit,
+      bgColor: "#1f3028",
+      textColor: "#fffaf3",
+      icon: Home,
+      links: [
+        { href: "/", label: t.nav.home, ariaLabel: t.nav.home },
+        { href: "/contact", label: t.nav.contact, ariaLabel: t.nav.contact },
+      ],
+    },
+    {
+      label: t.nav.care,
+      bgColor: "#352820",
+      textColor: "#fffaf3",
+      icon: Sparkles,
+      links: [
+        { href: "/services", label: t.nav.allServices, ariaLabel: t.nav.allServices },
+        { href: "/book", label: t.nav.bookNow, ariaLabel: t.nav.bookNow },
+      ],
+    },
+    {
+      label: t.nav.connect,
+      bgColor: "#28222c",
+      textColor: "#fffaf3",
+      icon: Phone,
+      links: [
+        { href: `tel:${businessProfile.phone}`, label: t.nav.callStudio, ariaLabel: t.nav.callStudio },
+        { href: "/book/confirmation", label: t.nav.confirmation, ariaLabel: t.nav.confirmation },
+      ],
+    },
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
@@ -59,12 +59,22 @@ export function SiteHeader() {
           </span>
           <span>{businessProfile.name}</span>
         </Link>
-        <NavDock items={dockItems} />
+        <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
+          {navItems.map((item) => (
+            <Button key={item.href} asChild variant="ghost">
+              <Link href={item.href}>{item.label}</Link>
+            </Button>
+          ))}
+          <Button asChild variant="ghost">
+            <a href={`tel:${businessProfile.phone}`}>{t.nav.call}</a>
+          </Button>
+        </nav>
+        <LanguageToggle className="hidden sm:inline-flex" />
         <Button asChild className="hidden sm:inline-flex">
-          <Link href="/book">Book now</Link>
+          <Link href="/book">{t.nav.bookNow}</Link>
         </Button>
         <div className="flex items-center gap-2 sm:hidden">
-          <Button asChild size="icon" variant="ghost" aria-label="Call studio">
+          <Button asChild size="icon" variant="ghost" aria-label={t.nav.callStudio}>
             <a href={`tel:${businessProfile.phone}`}>
               <Phone className="h-5 w-5" aria-hidden="true" />
             </a>
@@ -73,7 +83,7 @@ export function SiteHeader() {
             type="button"
             size="icon"
             variant="ghost"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
             aria-expanded={menuOpen}
             aria-controls="mobile-card-navigation"
             onClick={() => setMenuOpen((open) => !open)}
@@ -93,6 +103,7 @@ export function SiteHeader() {
             className="container grid gap-2 border-t border-border/70 pb-4 pt-3"
             aria-hidden={!menuOpen}
           >
+            <LanguageToggle className="justify-self-start bg-card/80" />
             {menuGroups.map((group, index) => {
               const Icon = group.icon;
 

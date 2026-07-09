@@ -1,23 +1,29 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, MapPin, Phone } from "lucide-react";
-import { BlurText } from "@/components/effects/blur-text";
 import BorderGlow from "@/components/effects/border-glow";
+import { ShinyText } from "@/components/effects/shiny-text";
 import SideRays from "@/components/effects/side-rays";
+import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
-import { businessProfile } from "@/lib/mock-data/customer";
+import { getBusinessProfile } from "@/lib/i18n";
 
 const heroImageUrl =
   "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=1600&q=80";
 
 export function EditorialHero() {
+  const { language, t } = useLanguage();
+  const businessProfile = getBusinessProfile(language);
+
   return (
     <section className="bg-[linear-gradient(180deg,hsl(var(--background))_0%,#17110d_16%,#090806_100%)] px-0 pb-3 pt-0 text-[#f8f1e8] sm:px-4 sm:py-5">
       <div className="mx-auto max-w-[1400px]">
         <div className="relative min-h-[640px] overflow-hidden bg-[#0d0b09] shadow-none sm:min-h-[720px] sm:rounded-[1.75rem] sm:border sm:border-[#d8b879]/10 sm:shadow-2xl lg:min-h-[760px]">
           <Image
             src={heroImageUrl}
-            alt="Dimly lit spa treatment detail with warm towels and botanical care"
+            alt={t.hero.imageAlt}
             width={1600}
             height={1200}
             priority
@@ -43,27 +49,30 @@ export function EditorialHero() {
           </div>
           <div className="relative z-10 flex min-h-[640px] flex-col justify-between p-6 sm:min-h-[720px] sm:p-10 lg:min-h-full lg:p-14">
             <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.22em] text-white/70">
-              <span>[店名 Placeholder]</span>
-              <span className="hidden sm:inline">中文 / English</span>
+              <span>{t.hero.brandPlaceholder}</span>
+              <span className="hidden sm:inline">{t.hero.languageNote}</span>
             </div>
             <div className="max-w-2xl space-y-6 pb-4">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#d8b879]">Premium appointment care</p>
-              <BlurText
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#d8b879]">{t.hero.eyebrow}</p>
+              <ShinyText
                 as="h1"
-                text="RELAXATION & BEAUTY CARE"
-                animateBy="words"
-                direction="top"
-                delay={110}
+                text={t.hero.headline}
+                speed={2.8}
+                delay={0.4}
+                color="#dbeafe"
+                shineColor="#ffffff"
+                spread={120}
+                direction="left"
                 className="font-serif text-5xl font-semibold leading-[0.95] tracking-normal text-white sm:text-7xl lg:text-8xl"
               />
               <p className="max-w-xl text-base leading-8 text-[#c9bbaa] sm:text-lg">
-                Personalized massage and beauty treatments designed to help you feel renewed, balanced, and cared for.
+                {t.hero.subheadline}
               </p>
               <div className="grid gap-3 pt-2 sm:flex">
                 <Button asChild size="lg" className="rounded-full bg-[#f8f1e8] px-7 text-[#15110e] hover:bg-[#f8f1e8]/90">
                   <Link href="/book">
                     <CalendarDays className="h-5 w-5" aria-hidden="true" />
-                    Book Now
+                    {t.common.bookNow}
                   </Link>
                 </Button>
                 <BorderGlow
@@ -87,7 +96,7 @@ export function EditorialHero() {
                   >
                     <a href={`tel:${businessProfile.phone}`}>
                       <Phone className="h-5 w-5" aria-hidden="true" />
-                      Call Us
+                      {t.nav.call}
                     </a>
                   </Button>
                 </BorderGlow>
@@ -95,7 +104,7 @@ export function EditorialHero() {
             </div>
             <p className="flex flex-wrap items-center gap-2 text-sm leading-6 text-[#c9bbaa]">
               <MapPin className="h-4 w-4" aria-hidden="true" />
-              San Jose, CA <span aria-hidden="true">·</span> By appointment <span aria-hidden="true">·</span> 中文 / English
+              {t.hero.locationLine}
             </p>
           </div>
         </div>
