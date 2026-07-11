@@ -9,6 +9,9 @@ import { getBusinessProfile } from "@/lib/i18n";
 export function ContactPanel() {
   const { language, t } = useLanguage();
   const businessProfile = getBusinessProfile(language);
+  const mapQuery = encodeURIComponent(businessProfile.address);
+  const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`;
 
   return (
     <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
@@ -39,18 +42,28 @@ export function ContactPanel() {
           </div>
         </CardContent>
       </Card>
-      <div className="min-h-64 rounded-lg border bg-secondary/40 p-5">
-        <div className="flex h-full min-h-56 flex-col justify-between rounded-md border border-dashed border-primary/30 bg-card/70 p-5">
+      <div className="overflow-hidden rounded-lg border bg-secondary/40 p-5">
+        <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.1em] text-primary">{t.contact.map}</p>
             <p className="mt-3 text-2xl font-semibold tracking-normal">{businessProfile.mapLabel}</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {t.contact.mapDescription}
-            </p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t.contact.mapDescription}</p>
           </div>
-          <Button variant="outline" disabled className="mt-6 w-full">
-            <Navigation className="h-4 w-4" aria-hidden="true" />
-            {t.contact.directions}
+          <div className="overflow-hidden rounded-md border bg-card shadow-sm">
+            <iframe
+              title={`${businessProfile.name} map`}
+              src={mapEmbedUrl}
+              className="h-72 w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <a href={directionsUrl} target="_blank" rel="noreferrer">
+              <Navigation className="h-4 w-4" aria-hidden="true" />
+              {t.contact.directions}
+            </a>
           </Button>
         </div>
       </div>

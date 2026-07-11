@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { Clock, DollarSign } from "lucide-react";
 import { useLanguage } from "@/components/i18n/language-provider";
-import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getServiceCategoryLabel } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import type { CustomerService } from "@/lib/mock-data/customer";
+import type { CustomerService } from "@/lib/i18n";
 
 export function ServiceCard({ service, featured = false }: { service: CustomerService; featured?: boolean }) {
   const { language, t } = useLanguage();
@@ -49,13 +48,13 @@ export function ServiceCard({ service, featured = false }: { service: CustomerSe
           </span>
         </div>
 
-        <Button
-          asChild
+        <PendingLinkButton
+          href={`/book?service=${service.id}`}
           size="sm"
           className="mt-1 h-11 w-fit rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          <Link href={`/book?service=${service.id}`}>{t.common.book}</Link>
-        </Button>
+          {t.common.book}
+        </PendingLinkButton>
       </div>
     </article>
   );

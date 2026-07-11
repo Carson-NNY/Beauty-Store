@@ -6,6 +6,7 @@ import { useState } from "react";
 import { LanguageToggle } from "@/components/i18n/language-toggle";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
 export function SiteHeader() {
@@ -15,7 +16,9 @@ export function SiteHeader() {
   const navItems = [
     { href: "/", label: t.nav.home },
     { href: "/services", label: t.nav.services },
+    { href: "/about", label: t.nav.owner },
     { href: "/contact", label: t.nav.contact },
+    { href: "/admin", label: "店主管理" },
   ];
   const menuGroups = [
     {
@@ -25,6 +28,7 @@ export function SiteHeader() {
       icon: Home,
       links: [
         { href: "/", label: t.nav.home, ariaLabel: t.nav.home },
+        { href: "/about", label: t.nav.owner, ariaLabel: t.nav.owner },
         { href: "/contact", label: t.nav.contact, ariaLabel: t.nav.contact },
       ],
     },
@@ -46,6 +50,7 @@ export function SiteHeader() {
       links: [
         { href: `tel:${businessProfile.phone}`, label: t.nav.callStudio, ariaLabel: t.nav.callStudio },
         { href: "/book/confirmation", label: t.nav.confirmation, ariaLabel: t.nav.confirmation },
+        { href: "/admin", label: "店主管理", ariaLabel: "店主管理" },
       ],
     },
   ];
@@ -61,18 +66,18 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
           {navItems.map((item) => (
-            <Button key={item.href} asChild variant="ghost">
-              <Link href={item.href}>{item.label}</Link>
-            </Button>
+            <PendingLinkButton key={item.href} href={item.href} variant="ghost">
+              {item.label}
+            </PendingLinkButton>
           ))}
           <Button asChild variant="ghost">
             <a href={`tel:${businessProfile.phone}`}>{t.nav.call}</a>
           </Button>
         </nav>
         <LanguageToggle className="hidden sm:inline-flex" />
-        <Button asChild className="hidden sm:inline-flex">
-          <Link href="/book">{t.nav.bookNow}</Link>
-        </Button>
+        <PendingLinkButton href="/book" className="hidden sm:inline-flex">
+          {t.nav.bookNow}
+        </PendingLinkButton>
         <div className="flex items-center gap-2 sm:hidden">
           <Button asChild size="icon" variant="ghost" aria-label={t.nav.callStudio}>
             <a href={`tel:${businessProfile.phone}`}>

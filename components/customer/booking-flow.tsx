@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, MapPin, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, UserRound } from "lucide-react";
+import { bookAppointmentAction } from "@/app/(public)/book/actions";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,19 +11,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getCustomerServices } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import type { PublicService } from "@/modules/services/domain/service";
 
 type BookingStep = 1 | 2 | 3 | 4 | 5;
 type VisitType = "in-store" | "home";
 
 export function BookingFlow({
   initialServiceId,
+  services,
+  servicesUnavailable = false,
   startDateIso,
 }: {
   initialServiceId?: string;
+  services: PublicService[];
+  servicesUnavailable?: boolean;
   startDateIso: string;
 }) {
+  const router = useRouter();
   const { language, t } = useLanguage();
-  const customerServices = useMemo(() => getCustomerServices(language), [language]);
+  const customerServices = useMemo(() => getCustomerServices(services, language), [language, services]);
   const localizedDates = useMemo(() => buildDateOptions(startDateIso, language), [language, startDateIso]);
   const availableTimes = useMemo(() => buildTimeOptions(language), [language]);
   const steps = t.booking.steps.map((label, index) => ({ id: (index + 1) as BookingStep, label }));
@@ -33,25 +41,45 @@ export function BookingFlow({
   const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
+  const [bookingError, setBookingError] = useState("");
+  const [validationAttemptedStep, setValidationAttemptedStep] = useState<BookingStep | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigatingToConfirmation, setIsNavigatingToConfirmation] = useState(false);
 
-  const selectedService = useMemo(
-    () => customerServices.find((service) => service.id === serviceId) ?? customerServices[0],
-    [customerServices, serviceId],
-  );
+  const selectedService = useMemo(() => customerServices.find((service) => service.id === serviceId) ?? customerServices[0], [
+    customerServices,
+    serviceId,
+  ]);
   const selectedDate = localizedDates.find((item) => item.value === date) ?? localizedDates[0];
   const selectedTime = availableTimes.find((item) => item.value === time) ?? availableTimes[0];
+  const hasSelectedService = Boolean(selectedService);
   const phoneDigits = getPhoneDigits(phone);
+  const isValidName = name.trim().length > 1;
   const hasPhoneValue = phone.trim().length > 0;
   const isValidPhone = phoneDigits.length === 10;
-  const hasRequiredContact = name.trim().length > 1 && isValidPhone;
+  const hasEmailValue = email.trim().length > 0;
+  const isValidEmail = !hasEmailValue || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const hasRequiredContact = isValidName && isValidPhone && isValidEmail;
   const hasRequiredAddress = visitType === "in-store" || address.trim().length > 5;
-  const canContinue = step < 4 || (hasRequiredContact && hasRequiredAddress);
+  const canContinue = hasSelectedService && (step < 4 || (hasRequiredContact && hasRequiredAddress));
+  const shouldShowStepErrors = validationAttemptedStep === step;
+  const shouldShowNameError = shouldShowStepErrors && !isValidName;
+  const shouldShowPhoneError = shouldShowStepErrors && !isValidPhone;
+  const shouldShowEmailError = hasEmailValue && !isValidEmail;
+  const shouldShowAddressError = shouldShowStepErrors && visitType === "home" && !hasRequiredAddress;
 
   function goNext() {
-    if (step < 5 && canContinue) {
-      setStep((current) => (current + 1) as BookingStep);
+    if (step >= 5) return;
+
+    if (!canContinue) {
+      setValidationAttemptedStep(step);
+      return;
     }
+
+    setValidationAttemptedStep(null);
+    setStep((current) => (current + 1) as BookingStep);
   }
 
   function goBack() {
@@ -61,22 +89,61 @@ export function BookingFlow({
   }
 
   function openStep(nextStep: BookingStep) {
-    if (nextStep === 5 && !canContinue) return;
+    if (nextStep === 5 && !canContinue) {
+      setValidationAttemptedStep(step);
+      return;
+    }
+    setValidationAttemptedStep(null);
     setStep(nextStep);
   }
 
-  function confirmationHref() {
-    const params = new URLSearchParams({
-      service: selectedService.name,
-      date: selectedDate.label,
-      time: selectedTime.label,
-      visitType: visitType === "home" ? t.booking.homeVisit : t.booking.inStore,
-      address: visitType === "home" ? address.trim() : "",
-      name: name.trim(),
-      phone: phone.trim(),
-      notes: notes.trim(),
-    });
-    return `/book/confirmation?${params.toString()}`;
+  async function submitAppointment() {
+    if (!selectedService || !canContinue || isSubmitting || isNavigatingToConfirmation) {
+      setValidationAttemptedStep(step);
+      return;
+    }
+
+    setBookingError("");
+    setIsSubmitting(true);
+    let didNavigate = false;
+
+    try {
+      const result = await bookAppointmentAction({
+        serviceId: selectedService.id,
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        customerEmail: email.trim() || undefined,
+        preferredStartTime: buildPreferredStartTimeIso(selectedDate.value, selectedTime.value),
+        notes: buildAppointmentNotes({
+          visitType,
+          address,
+          notes,
+          homeVisitLabel: t.booking.homeVisit,
+        }),
+      });
+
+      if (!result.ok || !result.appointment) {
+        setBookingError(result.message || t.booking.failed);
+        return;
+      }
+
+      const params = new URLSearchParams({
+        service: result.appointment.service,
+        preferredStartTime: result.appointment.preferredStartTime,
+        name: result.appointment.customerName,
+        emailSent: result.appointment.customerEmailProvided ? "1" : "0",
+      });
+
+      didNavigate = true;
+      setIsNavigatingToConfirmation(true);
+      router.push(`/book/confirmation?${params.toString()}`);
+    } catch {
+      setBookingError(t.booking.failed);
+    } finally {
+      if (!didNavigate) {
+        setIsSubmitting(false);
+      }
+    }
   }
 
   return (
@@ -104,24 +171,32 @@ export function BookingFlow({
         {step === 1 ? (
           <section className="space-y-4" aria-labelledby="choose-service-heading">
             <StepHeading icon={CalendarDays} title={t.booking.chooseService} subtitle={t.booking.chooseServiceSubtitle} />
-            <div className="grid gap-3">
-              {customerServices.map((service) => (
-                <button
-                  key={service.id}
-                  type="button"
-                  onClick={() => setServiceId(service.id)}
-                  className={cn(
-                    "rounded-md border p-4 text-left transition-colors",
-                    serviceId === service.id ? "border-primary bg-secondary/55" : "bg-background hover:bg-muted",
-                  )}
-                >
-                  <span className="block text-base font-semibold">{service.name}</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">
-                    {service.duration} · {service.price}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {customerServices.length > 0 ? (
+              <div className="grid gap-3">
+                {customerServices.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    onClick={() => setServiceId(service.id)}
+                    className={cn(
+                      "rounded-md border p-4 text-left transition-colors",
+                      serviceId === service.id ? "border-primary bg-secondary/55" : "bg-background hover:bg-muted",
+                    )}
+                  >
+                    <span className="block text-base font-semibold">{service.name}</span>
+                    <span className="mt-1 block text-sm text-muted-foreground">
+                      {service.duration} · {service.price}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-md border bg-background p-4 text-sm leading-6 text-muted-foreground">
+                {servicesUnavailable
+                  ? "Services are temporarily unavailable. Please call the studio for current options."
+                  : "No services are available right now."}
+              </p>
+            )}
           </section>
         ) : null}
 
@@ -172,11 +247,24 @@ export function BookingFlow({
             <StepHeading icon={UserRound} title={t.booking.infoTitle} subtitle={t.booking.infoSubtitle} />
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="booking-name">{t.booking.name}</Label>
-                <Input id="booking-name" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
+                <RequiredLabel htmlFor="booking-name" label={t.booking.name} requiredText={t.booking.required} />
+                <Input
+                  id="booking-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="name"
+                  aria-invalid={shouldShowNameError}
+                  aria-describedby="booking-name-help"
+                  className={cn(shouldShowNameError && "border-destructive focus-visible:ring-destructive/25")}
+                />
+                <FieldMessage
+                  id="booking-name-help"
+                  tone={shouldShowNameError ? "error" : "muted"}
+                  message={shouldShowNameError ? t.booking.nameRequired : t.booking.required}
+                />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="booking-phone">{t.booking.phone}</Label>
+                <RequiredLabel htmlFor="booking-phone" label={t.booking.phone} requiredText={t.booking.required} />
                 <Input
                   id="booking-phone"
                   value={phone}
@@ -184,18 +272,40 @@ export function BookingFlow({
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
-                  aria-invalid={hasPhoneValue && !isValidPhone}
+                  aria-invalid={shouldShowPhoneError}
                   aria-describedby="booking-phone-help"
+                  className={cn(shouldShowPhoneError && "border-destructive focus-visible:ring-destructive/25")}
                 />
-                <p
+                <FieldMessage
                   id="booking-phone-help"
-                  className={cn(
-                    "text-sm leading-6",
-                    hasPhoneValue && !isValidPhone ? "text-destructive" : "text-muted-foreground",
-                  )}
-                >
-                  {hasPhoneValue && !isValidPhone ? t.booking.phoneInvalid : t.booking.phoneHelper}
-                </p>
+                  tone={shouldShowPhoneError ? "error" : "muted"}
+                  message={
+                    shouldShowPhoneError
+                      ? hasPhoneValue
+                        ? t.booking.phoneInvalid
+                        : t.booking.phoneRequired
+                      : t.booking.phoneHelper
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="booking-email">{t.booking.email}</Label>
+                <Input
+                  id="booking-email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  aria-invalid={shouldShowEmailError}
+                  aria-describedby="booking-email-help"
+                  className={cn(shouldShowEmailError && "border-destructive focus-visible:ring-destructive/25")}
+                />
+                <FieldMessage
+                  id="booking-email-help"
+                  tone={shouldShowEmailError ? "error" : "muted"}
+                  message={shouldShowEmailError ? t.booking.emailInvalid : t.booking.emailHelper}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>{t.booking.visitType}</Label>
@@ -216,7 +326,7 @@ export function BookingFlow({
               </div>
               {visitType === "home" ? (
                 <div className="grid gap-2 rounded-lg border border-primary/20 bg-secondary/35 p-3">
-                  <Label htmlFor="booking-address">{t.booking.address}</Label>
+                  <RequiredLabel htmlFor="booking-address" label={t.booking.address} requiredText={t.booking.required} />
                   <Textarea
                     id="booking-address"
                     value={address}
@@ -224,10 +334,15 @@ export function BookingFlow({
                     rows={3}
                     autoComplete="street-address"
                     placeholder={t.booking.addressPlaceholder}
+                    aria-invalid={shouldShowAddressError}
+                    aria-describedby="booking-address-help"
+                    className={cn(shouldShowAddressError && "border-destructive focus-visible:ring-destructive/25")}
                   />
-                  {address.trim().length <= 5 ? (
-                    <p className="text-sm leading-6 text-muted-foreground">{t.booking.addressRequired}</p>
-                  ) : null}
+                  <FieldMessage
+                    id="booking-address-help"
+                    tone={shouldShowAddressError ? "error" : "muted"}
+                    message={shouldShowAddressError ? t.booking.addressRequired : t.booking.addressRequired}
+                  />
                 </div>
               ) : null}
               <div className="grid gap-2">
@@ -248,15 +363,28 @@ export function BookingFlow({
           <section className="space-y-4" aria-labelledby="review-heading">
             <StepHeading icon={Check} title={t.booking.reviewTitle} subtitle={t.booking.reviewSubtitle} />
             <div className="space-y-3 rounded-md bg-muted p-4 text-sm">
-              <SummaryRow label={t.booking.service} value={`${selectedService.name} · ${selectedService.duration} · ${selectedService.price}`} />
+              <SummaryRow
+                label={t.booking.service}
+                value={
+                  selectedService
+                    ? `${selectedService.name} · ${selectedService.duration} · ${selectedService.price}`
+                    : t.booking.notEntered
+                }
+              />
               <SummaryRow label={t.booking.visitType} value={visitType === "home" ? t.booking.homeVisit : t.booking.inStore} />
               {visitType === "home" ? <SummaryRow label={t.booking.address} value={address || t.booking.notEntered} /> : null}
               <SummaryRow label={t.booking.date} value={selectedDate.label} />
               <SummaryRow label={t.booking.time} value={selectedTime.label} />
               <SummaryRow label={t.booking.name} value={name || t.booking.notEntered} />
               <SummaryRow label={t.booking.phone} value={phone || t.booking.notEntered} />
+              {email ? <SummaryRow label={t.booking.email} value={email} /> : null}
               {notes ? <SummaryRow label={t.booking.notes} value={notes} /> : null}
             </div>
+            {bookingError ? (
+              <p className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm leading-6 text-destructive" role="alert">
+                {bookingError}
+              </p>
+            ) : null}
           </section>
         ) : null}
       </div>
@@ -267,17 +395,59 @@ export function BookingFlow({
           {t.booking.back}
         </Button>
         {step < 5 ? (
-          <Button type="button" onClick={goNext} disabled={!canContinue}>
+          <Button type="button" onClick={goNext}>
             {t.booking.continue}
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         ) : (
-          <Button asChild>
-            <a href={confirmationHref()}>{t.booking.confirm}</a>
-          </Button>
+          selectedService ? (
+            <Button type="button" onClick={submitAppointment} disabled={!canContinue || isSubmitting || isNavigatingToConfirmation}>
+              {isSubmitting || isNavigatingToConfirmation ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              {isSubmitting || isNavigatingToConfirmation ? t.booking.submitting : t.booking.confirm}
+            </Button>
+          ) : (
+            <Button type="button" disabled>
+              {t.booking.confirm}
+            </Button>
+          )
         )}
       </div>
     </div>
+  );
+}
+
+function RequiredLabel({
+  htmlFor,
+  label,
+  requiredText,
+}: {
+  htmlFor: string;
+  label: string;
+  requiredText: string;
+}) {
+  return (
+    <Label htmlFor={htmlFor} className="inline-flex items-center gap-2">
+      <span>{label}</span>
+      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+        {requiredText}
+      </span>
+    </Label>
+  );
+}
+
+function FieldMessage({
+  id,
+  message,
+  tone,
+}: {
+  id: string;
+  message: string;
+  tone: "muted" | "error";
+}) {
+  return (
+    <p id={id} className={cn("text-sm leading-6", tone === "error" ? "text-destructive" : "text-muted-foreground")}>
+      {message}
+    </p>
   );
 }
 
@@ -408,6 +578,39 @@ function formatTimeLabel(minutes: number, language: "zh" | "en") {
 
 function getPhoneDigits(value: string) {
   return value.replace(/\D/g, "");
+}
+
+function buildPreferredStartTimeIso(dateValue: string, timeValue: string) {
+  const date = parseIsoDate(dateValue);
+  const [hour = "0", minute = "0"] = timeValue.split(":");
+
+  date.setHours(Number(hour), Number(minute), 0, 0);
+
+  return date.toISOString();
+}
+
+function buildAppointmentNotes({
+  visitType,
+  address,
+  notes,
+  homeVisitLabel,
+}: {
+  visitType: VisitType;
+  address: string;
+  notes: string;
+  homeVisitLabel: string;
+}) {
+  const lines = [];
+
+  if (visitType === "home") {
+    lines.push(`${homeVisitLabel}: ${address.trim()}`);
+  }
+
+  if (notes.trim()) {
+    lines.push(notes.trim());
+  }
+
+  return lines.join("\n");
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {

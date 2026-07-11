@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ContactPanel } from "@/components/customer/contact-panel";
 import { MobileActionBar } from "@/components/customer/mobile-action-bar";
 import { useLanguage } from "@/components/i18n/language-provider";
-import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
 export function ContactPageContent() {
@@ -36,9 +35,9 @@ export function ContactPageContent() {
           {businessProfile.phone}
         </p>
       </div>
-      <Button asChild size="lg" className="w-full sm:w-auto">
-        <Link href="/book">{t.common.bookNow}</Link>
-      </Button>
+      <PendingLinkButton href="/book" size="lg" className="w-full sm:w-auto">
+        {t.common.bookNow}
+      </PendingLinkButton>
       <MobileActionBar />
     </main>
   );

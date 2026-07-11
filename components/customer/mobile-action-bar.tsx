@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { CalendarDays, Phone } from "lucide-react";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
 export function MobileActionBar() {
@@ -19,12 +19,10 @@ export function MobileActionBar() {
             {t.common.call}
           </a>
         </Button>
-        <Button asChild>
-          <Link href="/book">
-            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            {t.common.bookNow}
-          </Link>
-        </Button>
+        <PendingLinkButton href="/book">
+          <CalendarDays className="h-4 w-4" aria-hidden="true" />
+          {t.common.bookNow}
+        </PendingLinkButton>
       </div>
     </div>
   );

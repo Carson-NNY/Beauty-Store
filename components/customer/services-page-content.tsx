@@ -1,16 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { MobileActionBar } from "@/components/customer/mobile-action-bar";
 import { ServiceCard } from "@/components/customer/service-card";
 import { ScrollReveal } from "@/components/effects/scroll-reveal";
 import { useLanguage } from "@/components/i18n/language-provider";
-import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getCustomerServices } from "@/lib/i18n";
+import type { PublicService } from "@/modules/services/domain/service";
 
-export function ServicesPageContent() {
+export function ServicesPageContent({
+  services: publicServices,
+  servicesUnavailable = false,
+}: {
+  services: PublicService[];
+  servicesUnavailable?: boolean;
+}) {
   const { language, t } = useLanguage();
-  const services = getCustomerServices(language);
+  const services = getCustomerServices(publicServices, language);
 
   return (
     <main className="bg-[#f4f1eb]">
@@ -23,17 +29,25 @@ export function ServicesPageContent() {
             </h1>
             <p className="max-w-2xl leading-7 text-muted-foreground">{t.services.description}</p>
           </div>
-          <Button asChild size="lg" className="rounded-full px-7 lg:justify-self-end">
-            <Link href="/book">{t.common.bookNow}</Link>
-          </Button>
+          <PendingLinkButton href="/book" size="lg" className="rounded-full px-7 lg:justify-self-end">
+            {t.common.bookNow}
+          </PendingLinkButton>
         </ScrollReveal>
-        <div className="grid gap-14">
-          {services.map((service, index) => (
-            <ScrollReveal key={service.id} delayMs={Math.min(index, 4) * 90} y={28} durationMs={700}>
-              <ServiceCard service={service} featured={index === 0} />
-            </ScrollReveal>
-          ))}
-        </div>
+        {services.length > 0 ? (
+          <div className="grid gap-14">
+            {services.map((service, index) => (
+              <ScrollReveal key={service.id} delayMs={Math.min(index, 4) * 90} y={28} durationMs={700}>
+                <ServiceCard service={service} featured={index === 0} />
+              </ScrollReveal>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-foreground/10 bg-[#fdfbf6] px-5 py-6 text-sm leading-7 text-muted-foreground">
+            {servicesUnavailable
+              ? "Services are temporarily unavailable. Please call the studio for current options."
+              : "No services are available right now."}
+          </div>
+        )}
       </div>
       <MobileActionBar />
     </main>

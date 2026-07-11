@@ -9,93 +9,60 @@ datasource db {
 }
 
 enum AppointmentStatus {
-  REQUESTED
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-  NO_SHOW
-}
-
-model Store {
-  id          String        @id @default(cuid())
-  name        String
-  slug        String        @unique
-  timezone    String        @default("America/New_York")
-  email       String?
-  phone       String?
-  addressLine String?
-  city        String?
-  region      String?
-  postalCode  String?
-  services    Service[]
-  staff       StaffMember[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  submitted
+  booked
+  cancelled
+  completed
 }
 
 model Service {
   id              String        @id @default(cuid())
-  storeId         String
-  store           Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name            String
-  description     String?
+  category        String
+  description     String
   durationMinutes Int
-  priceCents      Int?
+  priceCents      Int
+  imageUrl        String
   isActive        Boolean       @default(true)
+  displayOrder    Int           @default(0)
   appointments    Appointment[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  @@index([storeId, isActive])
-}
-
-model StaffMember {
-  id           String        @id @default(cuid())
-  storeId      String
-  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  displayName  String
-  email        String?
-  isActive     Boolean       @default(true)
-  appointments Appointment[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  @@index([storeId, isActive])
+  @@index([isActive, displayOrder])
+  @@index([category])
 }
 
 model Customer {
   id           String        @id @default(cuid())
   name         String
+  phone        String        @unique
   email        String?
-  phone        String?
-  notes        String?
   appointments Appointment[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([email])
-  @@index([phone])
 }
 
 model Appointment {
-  id              String            @id @default(cuid())
-  serviceId       String
-  service         Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  staffMemberId   String?
-  staffMember     StaffMember?      @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
-  customerId      String
-  customer        Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  status          AppointmentStatus @default(REQUESTED)
-  startsAt        DateTime
-  endsAt          DateTime
-  customerNotes   String?
-  internalNotes   String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id                 String            @id @default(cuid())
+  customerId         String?
+  customer           Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  serviceId          String
+  service            Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  customerName       String
+  customerPhone      String
+  customerEmail      String?
+  preferredStartTime DateTime          @map("startTime")
+  endTime            DateTime
+  status             AppointmentStatus @default(submitted)
+  notes              String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
-  @@index([startsAt])
-  @@index([status])
-  @@index([serviceId])
-  @@index([staffMemberId])
   @@index([customerId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([preferredStartTime])
 }

@@ -2,7 +2,7 @@
 
 Mobile-first single-store appointment web app foundation.
 
-This initial codebase sets up the structure for a public customer experience and an admin area without implementing full booking logic, SMS, payment, or AI integrations.
+This codebase sets up a public customer experience with database-backed services, real appointment booking, and email notifications. SMS, payment, AI, authentication, and full admin management are intentionally deferred.
 
 ## Stack
 
@@ -26,10 +26,15 @@ components/
   layout/          Shared public/admin shells
   ui/              shadcn/ui-style primitives
 lib/
+  db/             Server-side Prisma client singleton
   validations/     Zod schemas
-  prisma.ts        Prisma client singleton
+modules/
+  appointments/   Appointment booking use case and repository
+  notifications/  Email provider abstraction
+  services/       Service catalog domain/application/infrastructure
 prisma/
-  schema.prisma    Supabase Postgres schema draft
+  schema.prisma    Supabase Postgres schema
+  seed.mjs         Initial service catalog seed data
 ```
 
 ## Local Setup
@@ -53,25 +58,45 @@ prisma/
    DIRECT_URL="postgresql://..."
    ```
 
+   For email notifications, also set:
+
+   ```bash
+   EMAIL_PROVIDER_API_KEY="..."
+   EMAIL_FROM="appointments@example.com"
+   OWNER_EMAIL="owner@example.com"
+   BUSINESS_NAME="Mei Lan Wellness Spa"
+   BUSINESS_ADDRESS="1288 Willow Street, Suite 6, Richmond, BC"
+   BUSINESS_PHONE="(604) 555-0188"
+   ```
+
+   Leave `EMAIL_PROVIDER_API_KEY` empty in local development to log sanitized email messages to the server console.
+
 4. Generate Prisma client:
 
    ```bash
    npm run prisma:generate
    ```
 
-5. Run the dev server:
+5. Create/update the database schema and seed services:
+
+   ```bash
+   npm run prisma:migrate
+   npm run db:seed
+   ```
+
+6. Run the dev server:
 
    ```bash
    npm run dev
    ```
 
-6. Open `http://localhost:3000`.
+7. Open `http://localhost:3000`.
 
 ## Routes
 
 - `/` public landing page
-- `/services` public service placeholders
-- `/book` booking-request placeholder form
+- `/services` public database-backed services
+- `/book` real appointment booking form
 - `/contact` public store details placeholder
 - `/admin` admin overview
 - `/admin/appointments` admin appointment queue placeholder
@@ -80,28 +105,30 @@ prisma/
 
 ## Database
 
-`prisma/schema.prisma` drafts the core single-store appointment model:
+`prisma/schema.prisma` defines the first database-backed foundation:
 
-- `Store`
 - `Service`
-- `StaffMember`
 - `Customer`
 - `Appointment`
 - `AppointmentStatus`
 
-Run migrations only after the schema is reviewed:
+Services are read through `modules/services/application/service-queries.ts`; UI components do not query Prisma directly.
+Appointments are created through `modules/appointments/application/create-appointment.ts`, which validates input, loads the selected service, checks booked-time conflicts, creates/reuses a customer by phone number, creates a booked appointment, and triggers email notifications.
+
+Run migrations and seed locally with:
 
 ```bash
 npm run prisma:migrate
+npm run db:seed
 ```
 
 ## Current Intentional Gaps
 
-- No full booking workflow
-- No appointment creation action
 - No authentication or authorization yet
 - No SMS notifications
 - No payment processing
 - No AI features
+- No referral rewards
+- No full admin appointment management yet
 
 These are intentionally deferred so the project starts with a small, understandable foundation.

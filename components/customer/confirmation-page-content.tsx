@@ -1,28 +1,26 @@
 "use client";
 
-import Link from "next/link";
-import { CalendarPlus, MapPin, Phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
 export function ConfirmationPageContent({
   service,
-  date,
-  time,
-  visitType,
-  address,
+  preferredStartTime,
+  customerName,
+  emailSent,
 }: {
   service?: string;
-  date?: string;
-  time?: string;
-  visitType?: string;
-  address?: string;
+  preferredStartTime?: string;
+  customerName?: string;
+  emailSent?: boolean;
 }) {
   const { language, t } = useLanguage();
   const businessProfile = getBusinessProfile(language);
-  const appointmentAddress = address || businessProfile.address;
+  const appointmentTime = preferredStartTime ? formatConfirmationDateTime(preferredStartTime, language) : "";
 
   return (
     <main className="container max-w-2xl space-y-6 py-8">
@@ -37,21 +35,20 @@ export function ConfirmationPageContent({
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-3 rounded-md bg-muted p-4 text-sm">
-            {visitType ? <SummaryRow label={t.booking.visitType} value={visitType} /> : null}
-            <SummaryRow label={t.confirmation.date} value={date || t.confirmation.fallbackDate} />
-            <SummaryRow label={t.confirmation.time} value={time || "11:30 AM"} />
-            <SummaryRow label={t.confirmation.address} value={appointmentAddress} />
+            <SummaryRow label={t.confirmation.date} value={appointmentTime || t.confirmation.fallbackDate} />
+            {customerName ? <SummaryRow label={t.confirmation.customer} value={customerName} /> : null}
+            <SummaryRow label={t.confirmation.address} value={businessProfile.address} />
+            <SummaryRow label={t.contact.phone} value={businessProfile.phone} />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <p className="rounded-md border border-primary/15 bg-secondary/40 p-4 text-sm leading-6 text-muted-foreground">
+            {emailSent ? t.confirmation.emailNotice : t.confirmation.description}
+          </p>
+          <div className="grid gap-3">
             <Button asChild>
               <a href={`tel:${businessProfile.phone}`}>
                 <Phone className="h-4 w-4" aria-hidden="true" />
                 {t.confirmation.callStudio}
               </a>
-            </Button>
-            <Button variant="secondary" disabled>
-              <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-              {t.confirmation.addCalendar}
             </Button>
           </div>
           <div className="rounded-md border border-dashed p-4">
@@ -62,11 +59,26 @@ export function ConfirmationPageContent({
           </div>
         </CardContent>
       </Card>
-      <Button asChild variant="outline" className="w-full">
-        <Link href="/book">{t.confirmation.bookAnother}</Link>
-      </Button>
+      <PendingLinkButton href="/book" variant="outline" className="w-full">
+        {t.confirmation.bookAnother}
+      </PendingLinkButton>
     </main>
   );
+}
+
+function formatConfirmationDateTime(value: string, language: "zh" | "en") {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {

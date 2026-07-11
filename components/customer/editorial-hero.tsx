@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { CalendarDays, MapPin, Phone } from "lucide-react";
 import BorderGlow from "@/components/effects/border-glow";
 import { ShinyText } from "@/components/effects/shiny-text";
 import SideRays from "@/components/effects/side-rays";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
+import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
 const heroImageUrl =
@@ -69,12 +69,10 @@ export function EditorialHero() {
                 {t.hero.subheadline}
               </p>
               <div className="grid gap-3 pt-2 sm:flex">
-                <Button asChild size="lg" className="rounded-full bg-[#f8f1e8] px-7 text-[#15110e] hover:bg-[#f8f1e8]/90">
-                  <Link href="/book">
-                    <CalendarDays className="h-5 w-5" aria-hidden="true" />
-                    {t.common.bookNow}
-                  </Link>
-                </Button>
+                <PendingLinkButton href="/book" size="lg" className="rounded-full bg-[#f8f1e8] px-7 text-[#15110e] hover:bg-[#f8f1e8]/90">
+                  <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  {t.common.bookNow}
+                </PendingLinkButton>
                 <BorderGlow
                   edgeSensitivity={30}
                   glowColor="40 80 80"

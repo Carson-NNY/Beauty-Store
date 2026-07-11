@@ -2,12 +2,17 @@
 
 import { BookingFlow } from "@/components/customer/booking-flow";
 import { useLanguage } from "@/components/i18n/language-provider";
+import type { PublicService } from "@/modules/services/domain/service";
 
 export function BookPageContent({
   initialServiceId,
+  services,
+  servicesUnavailable = false,
   startDateIso,
 }: {
   initialServiceId?: string;
+  services: PublicService[];
+  servicesUnavailable?: boolean;
   startDateIso: string;
 }) {
   const { t } = useLanguage();
@@ -19,7 +24,12 @@ export function BookPageContent({
         <h1 className="text-4xl font-semibold tracking-normal">{t.booking.pageTitle}</h1>
         <p className="leading-7 text-muted-foreground">{t.booking.pageDescription}</p>
       </div>
-      <BookingFlow initialServiceId={initialServiceId} startDateIso={startDateIso} />
+      <BookingFlow
+        initialServiceId={initialServiceId}
+        services={services}
+        servicesUnavailable={servicesUnavailable}
+        startDateIso={startDateIso}
+      />
     </main>
   );
 }

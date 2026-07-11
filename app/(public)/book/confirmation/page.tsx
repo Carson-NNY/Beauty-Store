@@ -18,10 +18,9 @@ export default async function ConfirmationPage({
   return (
     <ConfirmationPageContent
       service={readParam("service", "")}
-      date={readParam("date", "")}
-      time={readParam("time", "")}
-      visitType={readParam("visitType", "")}
-      address={readParam("address", "")}
+      preferredStartTime={readParam("preferredStartTime", "") || readParam("startTime", "")}
+      customerName={readParam("name", "")}
+      emailSent={readParam("emailSent", "") === "1"}
     />
   );
 }

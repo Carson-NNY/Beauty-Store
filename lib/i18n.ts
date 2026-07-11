@@ -1,11 +1,10 @@
 import {
   businessProfile,
-  customerServices,
   faqs,
   trustHighlights,
   workShowcaseItems,
-  type CustomerService,
 } from "@/lib/mock-data/customer";
+import type { PublicService, ServiceCategory } from "@/modules/services/domain/service";
 
 export type Language = "zh" | "en";
 
@@ -21,6 +20,7 @@ export const languageDictionary = {
     nav: {
       home: "首页",
       services: "服务",
+      owner: "店主介绍",
       contact: "联系",
       call: "电话",
       bookNow: "立即预约",
@@ -71,8 +71,8 @@ export const languageDictionary = {
       description: "是一家本地预约制美容按摩店。如需了解服务或时间安排，欢迎提前电话咨询。",
       visitStudio: "到店信息",
       map: "地图",
-      mapDescription: "确认最终地址和地图服务后，可在这里加入真实地图。",
-      directions: "路线占位",
+      mapDescription: "地图会根据店铺地址打开，可点击查看路线。",
+      directions: "查看路线",
       wechatPlaceholder: "微信占位",
       address: "地址",
       hours: "营业时间",
@@ -80,27 +80,32 @@ export const languageDictionary = {
       quickLinks: "快捷链接",
       bookAppointment: "预约服务",
     },
-    booking: {
-      pageEyebrow: "预约服务",
-      pageTitle: "提交预约时间",
-      pageDescription: "五个简单步骤，无需账号。当前为界面示例，还不会创建真实预约。",
+      booking: {
+        pageEyebrow: "预约服务",
+      pageTitle: "提交预约信息",
+      pageDescription: "五个简单步骤，无需账号。请告诉我们想预约的服务和时间。",
       steps: ["服务", "日期", "时间", "信息", "确认"],
       chooseService: "选择服务",
       chooseServiceSubtitle: "请选择想预约的护理项目。",
       chooseDate: "选择日期",
-      chooseDateSubtitle: "这里显示的是用于排版的示例日期。",
+      chooseDateSubtitle: "请选择想预约的日期。",
       chooseTime: "选择时间",
-      chooseTimeSubtitle: "可选时间目前为示例数据。",
+      chooseTimeSubtitle: "请选择想预约的时间。店里会在需要调整时联系你。",
       infoTitle: "你的联系信息",
       infoSubtitle: "无需账号。姓名和电话为必填。",
       name: "姓名",
+      nameRequired: "请填写姓名。",
       phone: "电话",
       phoneHelper: "请输入 10 位美国电话号码。",
+      phoneRequired: "请填写电话。",
       phoneInvalid: "电话需要刚好 10 位数字。",
+      email: "邮箱（选填）",
+      emailHelper: "填写邮箱后会收到预约确认邮件。",
+      emailInvalid: "请输入有效邮箱地址。",
       notes: "备注（选填）",
       notesPlaceholder: "有什么需要提前告诉我们？",
-      reviewTitle: "确认预约请求",
-      reviewSubtitle: "这里暂时不会创建真实预约。",
+      reviewTitle: "确认信息",
+      reviewSubtitle: "提交后店里会收到你的预约信息。",
       service: "服务",
       visitType: "服务方式",
       inStore: "到店服务",
@@ -110,23 +115,29 @@ export const languageDictionary = {
       address: "上门地址",
       addressPlaceholder: "请输入街道地址、门牌号或备注",
       addressRequired: "选择上门服务后需要填写地址。",
+      required: "必填",
       date: "日期",
       time: "时间",
       notEntered: "未填写",
       back: "返回",
       continue: "继续",
-      confirm: "确认请求",
+      confirm: "提交预约",
+      submitting: "正在提交…",
+      booked: "预约信息已提交。",
+      unavailable: "暂时无法提交，请稍后重试或电话联系店里。",
+      failed: "暂时无法提交预约信息，请稍后重试或电话联系店里。",
     },
     confirmation: {
-      eyebrow: "已收到请求",
-      title: "预约摘要",
-      description: "这是预约确认页的界面占位。真实确认规则和通知功能尚未实现。",
-      date: "日期",
-      time: "时间",
+      eyebrow: "预约信息已收到",
+      title: "预约信息",
+      description: "您的预约信息已收到。如需调整时间，我们会尽快联系您。",
+      customer: "顾客",
+      emailNotice: "如果你填写了邮箱，确认邮件可能需要一点时间送达。",
+      date: "预约时间",
+      time: "预约时间",
       address: "地址",
       callStudio: "电话咨询",
-      addCalendar: "加入日历",
-      mapNote: "真实地图和导航会在最终地址确认后加入。",
+      mapNote: "可在联系页面查看地图和路线。",
       bookAnother: "再预约一次",
       fallbackService: "招牌焕亮面部护理",
       fallbackDate: "7月8日 周三",
@@ -142,6 +153,7 @@ export const languageDictionary = {
     nav: {
       home: "Home",
       services: "Services",
+      owner: "Owner",
       contact: "Contact",
       call: "Call",
       bookNow: "Book now",
@@ -175,7 +187,7 @@ export const languageDictionary = {
       homeVisitEyebrow: "Home visit",
       homeVisitTitle: "Prefer care at home?",
       homeVisitDescription:
-        "Choose Home visit during booking and enter your address. Extra travel/service fees may apply and can be confirmed by the studio.",
+        "Choose Home visit during booking and enter your address. Extra travel/service fees may apply and the studio will explain them when following up.",
       homeVisitCta: "Book home visit",
       questionsEyebrow: "Questions",
       questionsTitle: "Before you book",
@@ -196,8 +208,8 @@ export const languageDictionary = {
         "is a local appointment-based studio. Call ahead if you have questions about services or timing.",
       visitStudio: "Visit the studio",
       map: "Map",
-      mapDescription: "A real embedded map can be added after the final address and provider decision.",
-      directions: "Directions placeholder",
+      mapDescription: "The map opens from the studio address. Tap for directions.",
+      directions: "Get directions",
       wechatPlaceholder: "WeChat placeholder",
       address: "Address",
       hours: "Hours",
@@ -205,27 +217,32 @@ export const languageDictionary = {
       quickLinks: "Quick links",
       bookAppointment: "Book appointment",
     },
-    booking: {
-      pageEyebrow: "Book appointment",
-      pageTitle: "Request a time",
-      pageDescription: "Five short steps. No account required. This is a mock flow and does not create a real appointment yet.",
+      booking: {
+        pageEyebrow: "Book appointment",
+      pageTitle: "Submit appointment information",
+      pageDescription: "Five short steps. No account required. Tell us the service and time you want to request.",
       steps: ["Service", "Date", "Time", "Info", "Review"],
       chooseService: "Choose a service",
       chooseServiceSubtitle: "Pick the treatment you want to request.",
       chooseDate: "Choose a date",
-      chooseDateSubtitle: "Mock dates are shown for layout only.",
+      chooseDateSubtitle: "Choose the date you prefer.",
       chooseTime: "Choose a time",
-      chooseTimeSubtitle: "Available times are mock options for now.",
+      chooseTimeSubtitle: "Choose the appointment time you want to request. The studio will contact you if anything needs to be adjusted.",
       infoTitle: "Your information",
       infoSubtitle: "No account needed. Name and phone are required.",
       name: "Name",
+      nameRequired: "Enter your name.",
       phone: "Phone",
       phoneHelper: "Enter a 10-digit US phone number.",
+      phoneRequired: "Enter your phone number.",
       phoneInvalid: "Phone number must contain exactly 10 digits.",
+      email: "Email optional",
+      emailHelper: "Add an email if you want a confirmation message.",
+      emailInvalid: "Enter a valid email address.",
       notes: "Notes optional",
       notesPlaceholder: "Anything we should know?",
-      reviewTitle: "Review request",
-      reviewSubtitle: "This does not create a real appointment yet.",
+      reviewTitle: "Review information",
+      reviewSubtitle: "Submitting sends your appointment information to the studio.",
       service: "Service",
       visitType: "Visit type",
       inStore: "In-store visit",
@@ -235,24 +252,29 @@ export const languageDictionary = {
       address: "Home visit address",
       addressPlaceholder: "Street address, unit, or access notes",
       addressRequired: "Address is required for home visit appointments.",
+      required: "Required",
       date: "Date",
       time: "Time",
       notEntered: "Not entered",
       back: "Back",
       continue: "Continue",
-      confirm: "Confirm request",
+      confirm: "Submit Appointment",
+      submitting: "Submitting...",
+      booked: "Appointment information submitted.",
+      unavailable: "We could not submit that appointment right now. Please try again or call the studio.",
+      failed: "We could not submit that appointment right now. Please try again or call the studio.",
     },
     confirmation: {
-      eyebrow: "Request received",
-      title: "Appointment summary",
-      description:
-        "This confirmation page is a UI placeholder. Real confirmation rules and notifications are intentionally not implemented.",
-      date: "Date",
-      time: "Time",
+      eyebrow: "Appointment request received",
+      title: "Appointment information",
+      description: "Your appointment information has been received. We will contact you if anything needs to be adjusted.",
+      customer: "Customer",
+      emailNotice: "If you provided an email, the confirmation message may take a moment to arrive.",
+      date: "Appointment time",
+      time: "Appointment time",
       address: "Address",
       callStudio: "Call studio",
-      addCalendar: "Add to calendar",
-      mapNote: "Map and directions integration will be added after the real address is finalized.",
+      mapNote: "Map and directions are available on the contact page.",
       bookAnother: "Book another appointment",
       fallbackService: "Signature Glow Facial",
       fallbackDate: "Wed, Jul 8",
@@ -266,6 +288,11 @@ export const languageDictionary = {
   },
 } as const;
 
+export type CustomerService = PublicService & {
+  duration: string;
+  price: string;
+};
+
 type LocalizedBusinessProfile = typeof businessProfile;
 
 const businessProfileZh: Partial<LocalizedBusinessProfile> = {
@@ -274,43 +301,37 @@ const businessProfileZh: Partial<LocalizedBusinessProfile> = {
   intro: "一家小而温暖的预约制美容按摩店，提供轻松服务、简单预约和中英双语友好接待。",
   hoursSummary: "每日营业，上午 10:00 - 晚上 8:00",
   wechat: "微信：MeiLanSpa",
-  mapLabel: "地图预览占位",
+  mapLabel: "4309, Flushing, NY",
 };
 
-const serviceZh: Record<string, Pick<CustomerService, "name" | "category" | "duration" | "description">> = {
+const serviceZh: Record<string, Partial<Pick<CustomerService, "name" | "description">>> = {
   "signature-facial": {
     name: "招牌焕亮面部护理",
-    category: "facial",
-    duration: "60 分钟",
     description: "温和清洁、蒸汽、按摩、面膜与补水护理，适合日常恢复清透光泽。",
   },
   "deep-cleansing-facial": {
     name: "深层清洁面部护理",
-    category: "facial",
-    duration: "75 分钟",
     description: "针对堵塞、暗沉与毛孔堆积的面部护理，最后以舒缓补水收尾。",
   },
   "relaxation-massage": {
     name: "舒缓放松按摩",
-    category: "massage",
-    duration: "60 分钟",
     description: "轻至中等力度按摩，适合肩颈疲劳、背部紧张和日常压力。",
   },
-  "meridian-bodywork": {
-    name: "经络调理按摩",
-    category: "massage",
-    duration: "90 分钟",
-    description: "较长的身体护理，结合传统按压点与拉伸感，帮助身体放松。",
+  "neck-shoulder-relief": {
+    name: "颈肩舒缓护理",
+    description: "针对久坐、屏幕疲劳、颈肩紧绷的上半身重点舒缓护理。",
   },
-  "head-neck-care": {
-    name: "头颈肩护理",
-    category: "body",
-    duration: "45 分钟",
-    description: "适合久坐、看屏幕疲劳、颈部紧绷和忙碌工作日的短时护理。",
+  "body-oil-massage": {
+    name: "全身精油按摩",
+    description: "流畅舒缓的全身精油按摩，以稳定力度帮助深度放松与身体舒展。",
+  },
+  "gentle-beauty-care": {
+    name: "温和美容护理",
+    description: "适合敏感或疲惫状态的轻柔护理，帮助肌肤与身心安静恢复。",
   },
 };
 
-const categoryLabels: Record<Language, Record<CustomerService["category"], string>> = {
+const categoryLabels: Record<Language, Record<ServiceCategory, string>> = {
   zh: {
     facial: "面部护理",
     massage: "按摩",
@@ -352,16 +373,20 @@ export function getBusinessProfile(language: Language) {
   return language === "zh" ? { ...businessProfile, ...businessProfileZh } : businessProfile;
 }
 
-export function getCustomerServices(language: Language): CustomerService[] {
-  if (language === "en") return customerServices;
+export function getCustomerServices(services: PublicService[], language: Language): CustomerService[] {
+  return services.map((service) => {
+    const localizedService = language === "zh" ? serviceZh[service.id] : undefined;
 
-  return customerServices.map((service) => ({
-    ...service,
-    ...serviceZh[service.id],
-  }));
+    return {
+      ...service,
+      ...localizedService,
+      duration: language === "zh" ? `${service.durationMinutes} 分钟` : `${service.durationMinutes} min`,
+      price: formatPrice(service.priceCents),
+    };
+  });
 }
 
-export function getServiceCategoryLabel(category: CustomerService["category"], language: Language) {
+export function getServiceCategoryLabel(category: ServiceCategory, language: Language) {
   return categoryLabels[language][category];
 }
 
@@ -380,4 +405,12 @@ export function getFaqs(language: Language) {
 
 export function getTrustHighlights(language: Language) {
   return language === "zh" ? trustHighlightsZh : trustHighlights;
+}
+
+function formatPrice(priceCents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(priceCents / 100);
 }

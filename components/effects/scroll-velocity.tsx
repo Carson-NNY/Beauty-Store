@@ -13,7 +13,7 @@ type ScrollVelocityProps = {
 
 export function ScrollVelocity({ items = [], velocity = 46, className, numCopies = 4 }: ScrollVelocityProps) {
   return (
-    <section className="overflow-hidden bg-[#fbf8f1] py-7" aria-label="Treatment photo showcase">
+    <section className="overflow-hidden bg-[#fbf8f1] py-10 sm:py-14" aria-label="Treatment photo showcase">
       <VelocityPhotos items={items} velocity={velocity} className={className} numCopies={numCopies} />
     </section>
   );
@@ -86,16 +86,19 @@ function VelocityPhotos({
         {Array.from({ length: numCopies }).map((_, index) => (
           <div key={index} className="flex shrink-0 items-center gap-4 sm:gap-5">
             {safeItems.map((item) => (
-              <figure key={`${item.text}-${index}`} className="group relative h-32 w-52 shrink-0 overflow-hidden rounded-2xl bg-muted sm:h-40 sm:w-72">
+              <figure
+                key={`${item.text}-${index}`}
+                className="group relative h-56 w-80 shrink-0 overflow-hidden rounded-2xl bg-muted sm:h-80 sm:w-[34rem]"
+              >
                 <Image
                   src={item.image}
                   alt=""
-                  width={520}
-                  height={320}
-                  sizes="(min-width: 640px) 18rem, 13rem"
+                  width={1088}
+                  height={640}
+                  sizes="(min-width: 640px) 34rem, 20rem"
                   className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                 />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-10 font-serif text-lg font-semibold text-white">
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-6 pb-5 pt-16 font-serif text-2xl font-semibold text-white sm:text-3xl">
                   {item.text}
                 </figcaption>
               </figure>

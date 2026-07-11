@@ -31,6 +31,9 @@ export function SiteFooter() {
           <Link href="/contact" className="block underline-offset-4 hover:underline">
             {t.nav.contact}
           </Link>
+          <Link href="/admin" className="block text-xs underline-offset-4 hover:underline">
+            {language === "zh" ? "店主管理" : "Admin"}
+          </Link>
         </div>
       </div>
     </footer>
