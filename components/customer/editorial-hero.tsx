@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PendingLinkButton } from "@/components/ui/pending-link-button";
 import { getBusinessProfile } from "@/lib/i18n";
 
-const heroImageUrl =
-  "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=1600&q=80";
+const heroImageUrl = "/images/home-banner.png";
 
 export function EditorialHero() {
   const { language, t } = useLanguage();
@@ -24,11 +23,11 @@ export function EditorialHero() {
           <Image
             src={heroImageUrl}
             alt={t.hero.imageAlt}
-            width={1600}
-            height={1200}
+            width={1672}
+            height={941}
             priority
             sizes="(min-width: 1024px) 64vw, 100vw"
-            className="absolute inset-0 z-0 h-full w-full object-cover opacity-70"
+            className="absolute inset-0 z-0 h-full w-full object-cover object-[68%_center] opacity-70 sm:object-center"
           />
           <div className="absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(7,6,5,0.98)_0%,rgba(13,10,8,0.82)_40%,rgba(13,10,8,0.48)_72%,rgba(13,10,8,0.32)_100%)]" />
           <div className="absolute inset-0 z-[2] bg-[radial-gradient(circle_at_82%_14%,rgba(216,184,121,0.2),transparent_28%),radial-gradient(circle_at_22%_30%,rgba(139,111,78,0.2),transparent_36%),linear-gradient(0deg,rgba(7,6,5,0.94)_0%,transparent_44%)]" />

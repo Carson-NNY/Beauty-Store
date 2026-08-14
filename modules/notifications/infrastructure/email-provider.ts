@@ -10,25 +10,32 @@ class ConsoleEmailProvider implements EmailProvider {
   }
 }
 
-class ResendEmailProvider implements EmailProvider {
-  constructor(
-    private readonly apiKey: string,
-    private readonly from: string,
-  ) {}
+class BrevoEmailProvider implements EmailProvider {
+  private readonly apiKey: string;
+  private readonly from: string;
+  private readonly replyTo?: string;
+
+  constructor(apiKey: string, from: string, replyTo?: string) {
+    this.apiKey = apiKey;
+    this.from = from;
+    this.replyTo = replyTo;
+  }
 
   async sendEmail(message: EmailMessage) {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": this.apiKey,
       },
       body: JSON.stringify({
-        from: this.from,
-        to: message.to,
+        sender: parseEmailAddress(this.from),
+        to: [parseEmailAddress(message.to)],
+        ...(this.replyTo ? { replyTo: parseEmailAddress(this.replyTo) } : {}),
         subject: message.subject,
-        text: message.text,
-        html: message.html,
+        textContent: message.text,
+        ...(message.html ? { htmlContent: message.html } : {}),
       }),
     });
 
@@ -39,14 +46,28 @@ class ResendEmailProvider implements EmailProvider {
 }
 
 export function getEmailProvider(): EmailProvider {
-  const apiKey = process.env.EMAIL_PROVIDER_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+  const apiKey = process.env.BREVO_API_KEY?.trim();
 
-  if (!apiKey || !from) {
+  if (provider !== "brevo" || !apiKey) {
     return new ConsoleEmailProvider();
   }
 
-  return new ResendEmailProvider(apiKey, from);
+  return new BrevoEmailProvider(apiKey, process.env.EMAIL_FROM || "", process.env.EMAIL_REPLY_TO?.trim() || undefined);
+}
+
+function parseEmailAddress(value: string) {
+  const trimmed = value.trim();
+  const namedAddress = trimmed.match(/^(.+?)\s*<([^<>]+)>$/);
+
+  if (namedAddress) {
+    return {
+      name: namedAddress[1].trim().replace(/^(["'])(.*)\1$/, "$2"),
+      email: namedAddress[2].trim(),
+    };
+  }
+
+  return { email: trimmed };
 }
 
 function sanitizeConsoleEmailText(value: string) {

@@ -20,8 +20,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang="zh-CN" data-scroll-behavior="smooth">
+      {/* Browser extensions such as Grammarly can add attributes to body before React hydrates. */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

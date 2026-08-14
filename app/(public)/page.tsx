@@ -1,6 +1,7 @@
 import { HomePageContent } from "@/components/customer/home-page-content";
 import { getFeaturedServices } from "@/modules/services/application/service-queries";
 import { defaultServices } from "@/modules/services/domain/default-services";
+import { getCategoryRepresentatives } from "@/modules/services/domain/service-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +16,12 @@ async function loadFeaturedServices() {
     const services = await getFeaturedServices();
 
     return {
-      services: services.length > 0 ? services : defaultServices.slice(0, 3),
+      services: services.length > 0 ? services : getCategoryRepresentatives(defaultServices),
       servicesUnavailable: false,
     };
   } catch {
     return {
-      services: defaultServices.slice(0, 3),
+      services: getCategoryRepresentatives(defaultServices),
       servicesUnavailable: false,
     };
   }

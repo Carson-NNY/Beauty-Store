@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { loginAdminAction } from "@/app/admin/actions";
+import { AdminLoginFeedback } from "@/components/admin/admin-login-feedback";
 import { AdminShell } from "@/components/layout/admin-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,7 +51,17 @@ function AdminLoginScreen({ protectionConfigured }: { protectionConfigured: bool
           <form action={loginAdminAction} className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="admin-password">密码</Label>
-              <Input id="admin-password" name="password" type="password" autoComplete="current-password" required />
+              <Input
+                id="admin-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                aria-describedby="admin-login-feedback"
+                required
+              />
+              <Suspense fallback={null}>
+                <AdminLoginFeedback />
+              </Suspense>
             </div>
             <PendingSubmitButton className="w-full" pendingLabel="正在登录">
               登录

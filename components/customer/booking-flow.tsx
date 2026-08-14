@@ -1,17 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, UserRound } from "lucide-react";
 import { bookAppointmentAction } from "@/app/(public)/book/actions";
 import { useLanguage } from "@/components/i18n/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getCustomerServices } from "@/lib/i18n";
+import { getCustomerServices, getServiceCategoryLabel } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import type { PublicService } from "@/modules/services/domain/service";
+import { groupServicesByCategory } from "@/modules/services/domain/service-catalog";
+import type { PublicService, ServiceCategory } from "@/modules/services/domain/service";
 
 type BookingStep = 1 | 2 | 3 | 4 | 5;
 type VisitType = "in-store" | "home";
@@ -27,14 +27,20 @@ export function BookingFlow({
   servicesUnavailable?: boolean;
   startDateIso: string;
 }) {
-  const router = useRouter();
   const { language, t } = useLanguage();
   const customerServices = useMemo(() => getCustomerServices(services, language), [language, services]);
+  const serviceGroups = useMemo(
+    () => groupServicesByCategory(customerServices).filter(({ services: categoryServices }) => categoryServices.length > 0),
+    [customerServices],
+  );
   const localizedDates = useMemo(() => buildDateOptions(startDateIso, language), [language, startDateIso]);
   const availableTimes = useMemo(() => buildTimeOptions(language), [language]);
   const steps = t.booking.steps.map((label, index) => ({ id: (index + 1) as BookingStep, label }));
   const [step, setStep] = useState<BookingStep>(1);
   const [serviceId, setServiceId] = useState(initialServiceId ?? customerServices[0]?.id);
+  const [openCategory, setOpenCategory] = useState<ServiceCategory | null>(
+    () => customerServices.find((service) => service.id === initialServiceId)?.category ?? customerServices[0]?.category ?? null,
+  );
   const [date, setDate] = useState(localizedDates[1]?.value);
   const [time, setTime] = useState(availableTimes[0]?.value);
   const [visitType, setVisitType] = useState<VisitType>("in-store");
@@ -46,7 +52,7 @@ export function BookingFlow({
   const [bookingError, setBookingError] = useState("");
   const [validationAttemptedStep, setValidationAttemptedStep] = useState<BookingStep | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNavigatingToConfirmation, setIsNavigatingToConfirmation] = useState(false);
+  const [confirmationUrl, setConfirmationUrl] = useState<string | null>(null);
 
   const selectedService = useMemo(() => customerServices.find((service) => service.id === serviceId) ?? customerServices[0], [
     customerServices,
@@ -98,14 +104,13 @@ export function BookingFlow({
   }
 
   async function submitAppointment() {
-    if (!selectedService || !canContinue || isSubmitting || isNavigatingToConfirmation) {
+    if (!selectedService || !canContinue || isSubmitting) {
       setValidationAttemptedStep(step);
       return;
     }
 
     setBookingError("");
     setIsSubmitting(true);
-    let didNavigate = false;
 
     try {
       const result = await bookAppointmentAction({
@@ -134,15 +139,14 @@ export function BookingFlow({
         emailSent: result.appointment.customerEmailProvided ? "1" : "0",
       });
 
-      didNavigate = true;
-      setIsNavigatingToConfirmation(true);
-      router.push(`/book/confirmation?${params.toString()}`);
+      const nextUrl = `/book/confirmation?${params.toString()}`;
+      setConfirmationUrl(nextUrl);
+      setIsSubmitting(false);
+      window.location.assign(nextUrl);
     } catch {
       setBookingError(t.booking.failed);
     } finally {
-      if (!didNavigate) {
-        setIsSubmitting(false);
-      }
+      setIsSubmitting(false);
     }
   }
 
@@ -173,22 +177,79 @@ export function BookingFlow({
             <StepHeading icon={CalendarDays} title={t.booking.chooseService} subtitle={t.booking.chooseServiceSubtitle} />
             {customerServices.length > 0 ? (
               <div className="grid gap-3">
-                {customerServices.map((service) => (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => setServiceId(service.id)}
-                    className={cn(
-                      "rounded-md border p-4 text-left transition-colors",
-                      serviceId === service.id ? "border-primary bg-secondary/55" : "bg-background hover:bg-muted",
-                    )}
-                  >
-                    <span className="block text-base font-semibold">{service.name}</span>
-                    <span className="mt-1 block text-sm text-muted-foreground">
-                      {service.duration} · {service.price}
-                    </span>
-                  </button>
-                ))}
+                {serviceGroups.map(({ category, services: categoryServices }) => {
+                  const isOpen = openCategory === category;
+                  const selectedCategoryService = categoryServices.find((service) => service.id === serviceId);
+                  const panelId = `booking-services-${category}`;
+
+                  return (
+                    <div
+                      key={category}
+                      className={cn(
+                        "overflow-hidden rounded-lg border bg-background",
+                        selectedCategoryService && "border-primary/70",
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenCategory((current) => (current === category ? null : category))}
+                        className={cn(
+                          "flex min-h-16 w-full cursor-pointer items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none",
+                          isOpen && "bg-secondary/35",
+                        )}
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-base font-semibold">
+                            {getServiceCategoryLabel(category, language)}
+                          </span>
+                          {selectedCategoryService ? (
+                            <span className="mt-1 flex items-center gap-1.5 text-sm text-primary">
+                              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              <span className="truncate">{selectedCategoryService.name}</span>
+                            </span>
+                          ) : (
+                            <span className="mt-1 block text-sm text-muted-foreground">
+                              {language === "zh" ? `${categoryServices.length} 个项目` : `${categoryServices.length} services`}
+                            </span>
+                          )}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none",
+                            isOpen && "rotate-180",
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+
+                      {isOpen ? (
+                        <div id={panelId} className="grid gap-2 border-t p-3" role="group" aria-label={getServiceCategoryLabel(category, language)}>
+                          {categoryServices.map((service) => (
+                            <button
+                              key={service.id}
+                              type="button"
+                              onClick={() => setServiceId(service.id)}
+                              className={cn(
+                                "min-h-16 cursor-pointer rounded-md border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                                serviceId === service.id
+                                  ? "border-primary bg-secondary/55"
+                                  : "bg-card hover:bg-muted",
+                              )}
+                              aria-pressed={serviceId === service.id}
+                            >
+                              <span className="block text-base font-semibold">{service.name}</span>
+                              <span className="mt-1 block text-sm text-muted-foreground">
+                                {service.duration} · {service.price}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="rounded-md border bg-background p-4 text-sm leading-6 text-muted-foreground">
@@ -401,9 +462,14 @@ export function BookingFlow({
           </Button>
         ) : (
           selectedService ? (
-            <Button type="button" onClick={submitAppointment} disabled={!canContinue || isSubmitting || isNavigatingToConfirmation}>
-              {isSubmitting || isNavigatingToConfirmation ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              {isSubmitting || isNavigatingToConfirmation ? t.booking.submitting : t.booking.confirm}
+            <Button
+              type="button"
+              onClick={confirmationUrl ? () => window.location.assign(confirmationUrl) : submitAppointment}
+              disabled={!canContinue || isSubmitting}
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              {confirmationUrl ? <Check className="h-4 w-4" aria-hidden="true" /> : null}
+              {confirmationUrl ? t.booking.submitted : isSubmitting ? t.booking.submitting : t.booking.confirm}
             </Button>
           ) : (
             <Button type="button" disabled>
@@ -520,7 +586,7 @@ function buildDateOptions(startDateIso: string, language: "zh" | "en") {
 function buildTimeOptions(language: "zh" | "en") {
   const options = [];
 
-  for (let minutes = 9 * 60; minutes <= 20 * 60; minutes += 30) {
+  for (let minutes = 9 * 60; minutes <= 19 * 60; minutes += 30) {
     options.push({
       value: formatTimeValue(minutes),
       label: formatTimeLabel(minutes, language),

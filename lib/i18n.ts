@@ -5,6 +5,7 @@ import {
   workShowcaseItems,
 } from "@/lib/mock-data/customer";
 import type { PublicService, ServiceCategory } from "@/modules/services/domain/service";
+import { getServiceImageUrl } from "@/modules/services/domain/service-image-catalog";
 
 export type Language = "zh" | "en";
 
@@ -46,9 +47,9 @@ export const languageDictionary = {
     home: {
       workEyebrow: "护理展示",
       workTitle: "温柔呈现护理时刻",
-      workDescription: "这里先使用示例图片展示护理环境、服务细节与疗愈氛围，之后可替换成真实店铺照片。",
-      servicesEyebrow: "热门服务",
+      servicesEyebrow: "护理分类",
       servicesTitle: "从今天需要的护理开始",
+      servicesDescription: "六类精选护理，先找到你今天最需要的方向，再到服务页查看完整项目。",
       allServices: "查看全部服务",
       homeVisitEyebrow: "上门服务",
       homeVisitTitle: "不方便到店？可以选择上门护理",
@@ -62,8 +63,18 @@ export const languageDictionary = {
     },
     services: {
       eyebrow: "服务项目",
-      title: "面部护理、按摩与身体护理",
-      description: "当前为示例服务内容。真实介绍、时长、价格与可预约时间可以后续编辑。",
+      title: "为每一种状态，找到合适的护理",
+      description: "从面部、头皮到身体与减肥塑形管理，再到组合套餐，按分类浏览完整项目。时长与价格为当前参考，预约确认时以店内信息为准。",
+      navigation: "服务分类",
+      sectionDescriptions: {
+        facial: "根据肤质与当下状态定制，从基础补水到紧致焕亮，温和照顾肌肤。",
+        scalp: "结合头皮清洁、按摩与舒缓步骤，为头部和肩颈带来轻松体验。",
+        body: "针对肩背疲劳、身体紧绷与肌肤状态，提供放松和细致护理。",
+        weightManagement: "围绕减肥、瘦身塑形与重点部位管理，通过按摩和紧致护理帮助改善腰腹、手臂与腿部的线条感。",
+        hairRemoval: "一个项目选择多个面部与身体部位，提供更舒适、清晰的预约方式。",
+        package: "把两到三项护理组合在一次到店中，获得更完整的放松与保养体验。",
+      },
+      weightManagementNotice: "美容与身体管理服务，不代替医疗减重。实际体验与效果会因个人状态、生活方式及护理次数而异。",
     },
     contact: {
       eyebrow: "联系",
@@ -86,7 +97,7 @@ export const languageDictionary = {
       pageDescription: "五个简单步骤，无需账号。请告诉我们想预约的服务和时间。",
       steps: ["服务", "日期", "时间", "信息", "确认"],
       chooseService: "选择服务",
-      chooseServiceSubtitle: "请选择想预约的护理项目。",
+      chooseServiceSubtitle: "请先选择护理大类，再选择想预约的具体项目。",
       chooseDate: "选择日期",
       chooseDateSubtitle: "请选择想预约的日期。",
       chooseTime: "选择时间",
@@ -123,6 +134,7 @@ export const languageDictionary = {
       continue: "继续",
       confirm: "提交预约",
       submitting: "正在提交…",
+      submitted: "预约已提交",
       booked: "预约信息已提交。",
       unavailable: "暂时无法提交，请稍后重试或电话联系店里。",
       failed: "暂时无法提交预约信息，请稍后重试或电话联系店里。",
@@ -179,10 +191,9 @@ export const languageDictionary = {
     home: {
       workEyebrow: "Our work",
       workTitle: "Treatment moments, softly showcased",
-      workDescription:
-        "A placeholder visual gallery for finished looks, calming rooms, and signature care details. Images and labels can be replaced when the real business media is ready.",
-      servicesEyebrow: "Popular services",
+      servicesEyebrow: "Care categories",
       servicesTitle: "Start with what you need today",
+      servicesDescription: "Explore six focused paths, then view the full treatment menu when you are ready to choose.",
       allServices: "All services",
       homeVisitEyebrow: "Home visit",
       homeVisitTitle: "Prefer care at home?",
@@ -198,8 +209,18 @@ export const languageDictionary = {
     },
     services: {
       eyebrow: "Services",
-      title: "Facials, massage, and body care",
-      description: "Mock service details for now. Real descriptions, durations, pricing, and availability can be edited later.",
+      title: "The right care for how you feel today",
+      description: "Browse the complete menu by category, from facial and scalp rituals to body and weight-management care. Times and prices are current guides and will be confirmed by the studio.",
+      navigation: "Service categories",
+      sectionDescriptions: {
+        facial: "Personalized care for hydration, clarity, calm, brightness, and a refreshed look.",
+        scalp: "Scalp cleansing, massage, and calming rituals designed for a lighter head-and-shoulder reset.",
+        body: "Focused relaxation and skin care for back tension, body fatigue, texture, and tone.",
+        weightManagement: "Firming and focused body care designed to support smoother-looking skin and more defined contours.",
+        hairRemoval: "Choose from multiple face and body areas within one clear, comfort-focused service.",
+        package: "Combine two or three treatments in one visit for a fuller relaxation and beauty ritual.",
+      },
+      weightManagementNotice: "A beauty and body-management service, not medical weight-loss treatment. Experiences and results vary by individual, lifestyle, and treatment frequency.",
     },
     contact: {
       eyebrow: "Contact",
@@ -223,7 +244,7 @@ export const languageDictionary = {
       pageDescription: "Five short steps. No account required. Tell us the service and time you want to request.",
       steps: ["Service", "Date", "Time", "Info", "Review"],
       chooseService: "Choose a service",
-      chooseServiceSubtitle: "Pick the treatment you want to request.",
+      chooseServiceSubtitle: "Choose a service category, then select a treatment.",
       chooseDate: "Choose a date",
       chooseDateSubtitle: "Choose the date you prefer.",
       chooseTime: "Choose a time",
@@ -260,6 +281,7 @@ export const languageDictionary = {
       continue: "Continue",
       confirm: "Submit Appointment",
       submitting: "Submitting...",
+      submitted: "Appointment submitted",
       booked: "Appointment information submitted.",
       unavailable: "We could not submit that appointment right now. Please try again or call the studio.",
       failed: "We could not submit that appointment right now. Please try again or call the studio.",
@@ -299,48 +321,53 @@ const businessProfileZh: Partial<LocalizedBusinessProfile> = {
   name: "美兰养生美容馆",
   tagline: "本地预约制面部护理、按摩与安静放松时间。",
   intro: "一家小而温暖的预约制美容按摩店，提供轻松服务、简单预约和中英双语友好接待。",
-  hoursSummary: "每日营业，上午 10:00 - 晚上 8:00",
+  hoursSummary: "每日营业，上午 9:00 - 晚上 7:00",
   wechat: "微信：MeiLanSpa",
-  mapLabel: "4309, Flushing, NY",
+  mapLabel: "3707三楼319 main st flushing 11354",
 };
 
 const serviceZh: Record<string, Partial<Pick<CustomerService, "name" | "description">>> = {
-  "signature-facial": {
-    name: "招牌焕亮面部护理",
-    description: "温和清洁、蒸汽、按摩、面膜与补水护理，适合日常恢复清透光泽。",
-  },
-  "deep-cleansing-facial": {
-    name: "深层清洁面部护理",
-    description: "针对堵塞、暗沉与毛孔堆积的面部护理，最后以舒缓补水收尾。",
-  },
-  "relaxation-massage": {
-    name: "舒缓放松按摩",
-    description: "轻至中等力度按摩，适合肩颈疲劳、背部紧张和日常压力。",
-  },
-  "neck-shoulder-relief": {
-    name: "颈肩舒缓护理",
-    description: "针对久坐、屏幕疲劳、颈肩紧绷的上半身重点舒缓护理。",
-  },
-  "body-oil-massage": {
-    name: "全身精油按摩",
-    description: "流畅舒缓的全身精油按摩，以稳定力度帮助深度放松与身体舒展。",
-  },
-  "gentle-beauty-care": {
-    name: "温和美容护理",
-    description: "适合敏感或疲惫状态的轻柔护理，帮助肌肤与身心安静恢复。",
-  },
+  "custom-facial": { name: "基础定制面部护理", description: "根据个人肤质进行定制护理，通过温和清洁、补水和基础修护，帮助肌肤恢复柔软、水润与自然光泽。" },
+  "deep-cleansing-facial": { name: "深层清洁净肤护理", description: "深层清洁毛孔和肌肤表面的多余油脂，帮助改善毛孔堵塞、油脂堆积和肤色不清透，使肌肤更加清爽、细腻。" },
+  "hydro-oxygen-facial": { name: "水氧补水面部护理", description: "结合深层补水、精华导入和舒缓护理，为肌肤补充水分，帮助改善干燥、紧绷和缺乏光泽。" },
+  "calming-barrier-facial": { name: "舒缓维稳面部护理", description: "采用温和的清洁、补水和舒缓步骤，帮助缓解肌肤干燥、泛红和不适感，支持肌肤恢复稳定状态。" },
+  "brightening-facial": { name: "焕亮匀净面部护理", description: "结合温和清洁、抗氧化护理和亮肤精华，帮助改善暗沉、肤色不均和疲惫感，使肌肤显得更加明亮有光泽。" },
+  "firming-facial": { name: "紧致抗初老面部护理", description: "通过按摩、精华护理和紧致步骤，帮助改善松弛与缺乏弹性的状态，使肌肤看起来更加饱满有活力。" },
+  "luxury-vitality-facial": { name: "奢华全方位活肤护理", description: "从面部延伸至颈部、肩部、手臂和双手，结合深层清洁、补水滋养、按摩和面膜，带来完整放松体验。" },
+  "essential-head-spa": { name: "基础舒缓头疗", description: "结合头皮清洁、头部按摩、肩颈放松和草本冲洗，帮助放松头部压力，清洁头皮并改善日常疲劳感。" },
+  "luxury-head-spa": { name: "豪华深层头疗", description: "在基础头疗之上加入更完整的头皮清洁、热敷、按摩和护理步骤，帮助舒缓紧绷头皮，带来深度放松。" },
+  "custom-scalp-care": { name: "定制头皮护理", description: "根据头皮油脂、敏感度、干燥程度和头发状态制定方案，结合清洁、精华与按摩，帮助维持清爽健康的头皮环境。" },
+  "deep-scalp-purifying": { name: "深层净化头皮护理", description: "通过头皮检测、深层清洁和精华护理，帮助去除头皮油脂和产品残留，使头皮保持清爽洁净。" },
+  "back-relaxation-massage": { name: "背部舒缓按摩", description: "针对肩背部紧绷和疲劳进行按摩放松，帮助舒缓肌肉压力，改善久坐或日常劳累带来的不适感。" },
+  "full-body-relaxation": { name: "全身舒缓按摩", description: "通过全身按摩帮助放松肌肉、舒缓疲劳与压力，使身体恢复轻松舒适的状态。" },
+  "body-firming-contour": { name: "减肥瘦身塑形护理", description: "为减肥塑形目标设计的身体管理护理，结合按摩与紧致步骤，重点护理腰腹、腿部或手臂，帮助改善身体线条与肌肤松弛感。" },
+  "back-clearing-care": { name: "背部净肤护理", description: "针对背部油脂、毛孔堵塞和粗糙进行清洁、去角质、舒缓和补水护理，帮助背部肌肤更加干净、细腻。" },
+  "deep-back-renewal": { name: "背部深层调理护理", description: "在背部清洁基础上加入更完整的焕肤、舒缓和滋养步骤，针对粗糙、痘后暗沉和肤色不均加强护理。" },
+  "cool-comfort-hair-removal": { name: "冰感舒适脱毛", description: "采用带有冰感舒适设计的脱毛护理，可选择面部、唇部、腋下、手臂、背部、小腿或全腿，帮助减少频繁除毛的麻烦。" },
+  "head-spa-back-package": { name: "头疗与背部放松套餐", description: "将舒缓头疗与背部按摩结合，一次放松头部、肩颈和背部，适合久坐、工作疲劳和压力较大的顾客。" },
+  "head-spa-body-package": { name: "头疗与全身放松套餐", description: "将头皮清洁、头部按摩和全身舒缓按摩结合，为顾客提供更完整的深度放松体验。" },
+  "head-spa-facial-package": { name: "头疗与焕肤护理套餐", description: "结合舒缓头疗与定制面部护理，同时照顾头皮和面部肌肤，在放松的同时完成日常美容保养。" },
+  "facial-body-package": { name: "焕肤与全身放松套餐", description: "将面部护理和全身按摩结合，在改善肌肤状态的同时舒缓身体疲劳，适合需要全面放松和保养的顾客。" },
+  "triple-renewal-package": { name: "三项焕新护理套餐", description: "包含头疗、面部护理和背部按摩，通过三种护理项目带来完整的放松与焕新体验。" },
+  "luxury-complete-package": { name: "豪华全方位护理套餐", description: "包含头疗、定制面部护理和全身按摩，适合希望进行深度放松和全面保养的顾客。" },
 };
 
 const categoryLabels: Record<Language, Record<ServiceCategory, string>> = {
   zh: {
     facial: "面部护理",
-    massage: "按摩",
+    scalp: "头疗护理",
     body: "身体护理",
+    "weight-management": "减肥塑形管理",
+    "hair-removal": "脱毛护理",
+    package: "精选套餐",
   },
   en: {
-    facial: "Facial",
-    massage: "Massage",
+    facial: "Facial care",
+    scalp: "Head spa",
     body: "Body care",
+    "weight-management": "Weight management",
+    "hair-removal": "Hair removal",
+    package: "Packages",
   },
 };
 
@@ -380,6 +407,7 @@ export function getCustomerServices(services: PublicService[], language: Languag
     return {
       ...service,
       ...localizedService,
+      imageUrl: getServiceImageUrl(service.id, service.imageUrl),
       duration: language === "zh" ? `${service.durationMinutes} 分钟` : `${service.durationMinutes} min`,
       price: formatPrice(service.priceCents),
     };

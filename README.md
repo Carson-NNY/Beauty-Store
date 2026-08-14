@@ -61,15 +61,19 @@ prisma/
    For email notifications, also set:
 
    ```bash
-   EMAIL_PROVIDER_API_KEY="..."
-   EMAIL_FROM="appointments@example.com"
+   EMAIL_PROVIDER="brevo"
+   BREVO_API_KEY="..."
+   EMAIL_FROM="Mei Lan Wellness Spa <appointments@example.com>"
+   EMAIL_REPLY_TO="appointments@example.com"
    OWNER_EMAIL="owner@example.com"
    BUSINESS_NAME="Mei Lan Wellness Spa"
    BUSINESS_ADDRESS="1288 Willow Street, Suite 6, Richmond, BC"
-   BUSINESS_PHONE="(604) 555-0188"
+   BUSINESS_PHONE="9293911865"
    ```
 
-   Leave `EMAIL_PROVIDER_API_KEY` empty in local development to log sanitized email messages to the server console.
+   Create a Brevo API key and authenticate the sender address or domain used by `EMAIL_FROM` in Brevo. The sender supports either `sender@example.com` or `Business Name <sender@example.com>`. `EMAIL_REPLY_TO` is optional.
+
+   Leave `BREVO_API_KEY` empty in local development to log sanitized email messages to the server console. In Vercel, add the same email variables to the relevant project environments and redeploy after changing them.
 
 4. Generate Prisma client:
 

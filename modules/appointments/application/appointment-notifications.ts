@@ -1,5 +1,6 @@
 import type { PublicService } from "@/modules/services/domain/service";
 import { businessProfile } from "@/lib/mock-data/customer";
+import { getCustomerServices } from "@/lib/i18n";
 import { getEmailProvider } from "@/modules/notifications/infrastructure/email-provider";
 
 type BookedAppointmentNotification = {
@@ -13,21 +14,20 @@ type BookedAppointmentNotification = {
 };
 
 export async function sendAppointmentSubmissionNotifications(input: BookedAppointmentNotification) {
-  const provider = getEmailProvider();
   const ownerEmail = process.env.OWNER_EMAIL;
+  const provider = getEmailProvider();
   const business = getBusinessContact();
   const dateTime = formatAppointmentDateTime(input.preferredStartTime);
-  const adminAppointmentUrl = buildAdminAppointmentUrl(input.appointmentId);
-
+  const serviceNameZh = getCustomerServices([input.service], "zh")[0]?.name ?? input.service.name;
   const sendOperations: Promise<void>[] = [];
 
   if (ownerEmail) {
     sendOperations.push(
       provider.sendEmail({
         to: ownerEmail,
-        subject: `新的预约提交：${input.service.name} · ${dateTime}`,
-        text: buildOwnerEmailText(input, dateTime),
-        html: buildOwnerEmailHtml(input, dateTime, adminAppointmentUrl),
+        subject: `网站新预约：${serviceNameZh} · ${dateTime}`,
+        text: buildOwnerEmailText(input, dateTime, serviceNameZh),
+        html: buildOwnerEmailHtml(input, dateTime, serviceNameZh),
       }),
     );
   } else {
@@ -41,8 +41,8 @@ export async function sendAppointmentSubmissionNotifications(input: BookedAppoin
       provider.sendEmail({
         to: input.customerEmail,
         subject: "Appointment information received / 已收到您的预约信息",
-        text: buildCustomerEmailText(input, business, dateTime),
-        html: buildCustomerEmailHtml(input, business, dateTime),
+        text: buildCustomerEmailText(input, business, dateTime, serviceNameZh),
+        html: buildCustomerEmailHtml(input, business, dateTime, serviceNameZh),
       }),
     );
   }
@@ -58,7 +58,12 @@ export async function sendAppointmentSubmissionNotifications(input: BookedAppoin
   }
 }
 
-function buildCustomerEmailText(input: BookedAppointmentNotification, business: BusinessContact, dateTime: string) {
+function buildCustomerEmailText(
+  input: BookedAppointmentNotification,
+  business: BusinessContact,
+  dateTime: string,
+  serviceNameZh: string,
+) {
   return [
     `Hi ${input.customerName},`,
     "",
@@ -80,7 +85,7 @@ function buildCustomerEmailText(input: BookedAppointmentNotification, business: 
     "",
     "感谢您选择我们！我们已经收到您的预约信息啦。",
     "",
-    `服务项目：${input.service.name}`,
+    `服务项目：${serviceNameZh}`,
     `预约时间：${dateTime}`,
     `地址：${business.address}`,
     `电话：${business.phone}`,
@@ -92,9 +97,9 @@ function buildCustomerEmailText(input: BookedAppointmentNotification, business: 
   ].join("\n");
 }
 
-function buildOwnerEmailText(input: BookedAppointmentNotification, dateTime: string) {
+function buildOwnerEmailText(input: BookedAppointmentNotification, dateTime: string, serviceNameZh: string) {
   return [
-    "新的预约提交",
+    "网站新预约",
     "",
     "顾客信息：",
     `- 姓名：${input.customerName}`,
@@ -102,7 +107,8 @@ function buildOwnerEmailText(input: BookedAppointmentNotification, dateTime: str
     `- 邮箱：${input.customerEmail || "未填写"}`,
     "",
     "预约信息：",
-    `- 服务项目：${input.service.name}`,
+    `- 预约编号：${input.appointmentId}`,
+    `- 服务项目：${serviceNameZh}`,
     `- 预约时间：${dateTime}`,
     `- 备注：${input.notes || "无"}`,
     "",
@@ -110,11 +116,11 @@ function buildOwnerEmailText(input: BookedAppointmentNotification, dateTime: str
   ].join("\n");
 }
 
-function buildOwnerEmailHtml(input: BookedAppointmentNotification, dateTime: string, adminAppointmentUrl: string) {
+function buildOwnerEmailHtml(input: BookedAppointmentNotification, dateTime: string, serviceNameZh: string) {
   const customerEmail = input.customerEmail || "";
 
   return emailShell([
-    `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#1f3028;">新的预约提交</h1>`,
+    `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#1f3028;">网站新预约</h1>`,
     `<h2 style="margin:20px 0 8px;font-size:16px;color:#352820;">顾客信息</h2>`,
     `<p style="margin:6px 0;"><strong>姓名：</strong>${escapeHtml(input.customerName)}</p>`,
     `<p style="margin:6px 0;"><strong>电话：</strong><a href="tel:${escapeAttribute(input.customerPhone)}" style="color:#1f5f4b;">${escapeHtml(input.customerPhone)}</a></p>`,
@@ -124,15 +130,20 @@ function buildOwnerEmailHtml(input: BookedAppointmentNotification, dateTime: str
         : "未填写"
     }</p>`,
     `<h2 style="margin:20px 0 8px;font-size:16px;color:#352820;">预约信息</h2>`,
-    `<p style="margin:6px 0;"><strong>服务项目：</strong>${escapeHtml(input.service.name)}</p>`,
+    `<p style="margin:6px 0;"><strong>预约编号：</strong>${escapeHtml(input.appointmentId)}</p>`,
+    `<p style="margin:6px 0;"><strong>服务项目：</strong>${escapeHtml(serviceNameZh)}</p>`,
     `<p style="margin:6px 0;"><strong>预约时间：</strong>${escapeHtml(dateTime)}</p>`,
     `<p style="margin:6px 0;"><strong>备注：</strong>${escapeHtml(input.notes || "无").replace(/\n/g, "<br />")}</p>`,
     `<p style="margin:20px 0 0;">请根据实际情况联系顾客确认或调整时间。</p>`,
-    `<p style="margin:18px 0 0;"><a href="${escapeAttribute(adminAppointmentUrl)}" style="display:inline-block;border-radius:8px;background:#1f5f4b;color:#ffffff;padding:11px 16px;text-decoration:none;">查看预约记录</a></p>`,
   ].join(""));
 }
 
-function buildCustomerEmailHtml(input: BookedAppointmentNotification, business: BusinessContact, dateTime: string) {
+function buildCustomerEmailHtml(
+  input: BookedAppointmentNotification,
+  business: BusinessContact,
+  dateTime: string,
+  serviceNameZh: string,
+) {
   return emailShell([
     `<p style="margin:0 0 12px;">Hi ${escapeHtml(input.customerName)},</p>`,
     `<p style="margin:0 0 14px;">Thank you for choosing us! We’re happy to let you know that we’ve received your appointment request.</p>`,
@@ -145,7 +156,7 @@ function buildCustomerEmailHtml(input: BookedAppointmentNotification, business: 
     `<hr style="border:none;border-top:1px solid #e5ded4;margin:22px 0;" />`,
     `<p style="margin:0 0 12px;">您好 ${escapeHtml(input.customerName)}，</p>`,
     `<p style="margin:0 0 14px;">感谢您选择我们！我们已经收到您的预约信息啦。</p>`,
-    `<p style="margin:6px 0;"><strong>服务项目：</strong>${escapeHtml(input.service.name)}</p>`,
+    `<p style="margin:6px 0;"><strong>服务项目：</strong>${escapeHtml(serviceNameZh)}</p>`,
     `<p style="margin:6px 0;"><strong>预约时间：</strong>${escapeHtml(dateTime)}</p>`,
     `<p style="margin:6px 0;"><strong>地址：</strong>${escapeHtml(business.address)}</p>`,
     `<p style="margin:6px 0;"><strong>电话：</strong>${escapeHtml(business.phone)}</p>`,
@@ -177,13 +188,6 @@ function formatAppointmentDateTime(date: Date) {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
-}
-
-function buildAdminAppointmentUrl(appointmentId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  const path = `/admin/appointments/${appointmentId}`;
-
-  return baseUrl ? `${baseUrl}${path}` : path;
 }
 
 function emailShell(content: string) {

@@ -16,7 +16,6 @@ export function SiteHeader() {
   const navItems = [
     { href: "/", label: t.nav.home },
     { href: "/services", label: t.nav.services },
-    { href: "/about", label: t.nav.owner },
     { href: "/contact", label: t.nav.contact },
     { href: "/admin", label: "店主管理" },
   ];
@@ -28,7 +27,6 @@ export function SiteHeader() {
       icon: Home,
       links: [
         { href: "/", label: t.nav.home, ariaLabel: t.nav.home },
-        { href: "/about", label: t.nav.owner, ariaLabel: t.nav.owner },
         { href: "/contact", label: t.nav.contact, ariaLabel: t.nav.contact },
       ],
     },

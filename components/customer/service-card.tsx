@@ -16,9 +16,10 @@ export function ServiceCard({ service, featured = false }: { service: CustomerSe
       <div className="reveal-image overflow-hidden rounded-[1.1rem] bg-stone-200/50">
         <Image
           src={service.imageUrl}
-          alt={`${service.name} treatment room preview`}
+          alt={language === "zh" ? `${service.name}护理示意图` : `${service.name} treatment preview`}
           width={900}
           height={620}
+          sizes={featured ? "(min-width: 768px) 52vw, 100vw" : "(min-width: 1280px) 36vw, (min-width: 768px) 50vw, 100vw"}
           className={cn(
             "w-full object-cover transition duration-700 ease-out group-hover/service:scale-[1.025]",
             featured ? "aspect-[4/3] h-full" : "aspect-[4/3]",
@@ -31,9 +32,9 @@ export function ServiceCard({ service, featured = false }: { service: CustomerSe
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-accent/80">
             {getServiceCategoryLabel(service.category, language)}
           </p>
-          <h2 className="font-serif text-2xl font-semibold leading-tight tracking-normal text-foreground sm:text-3xl">
+          <h3 className="font-serif text-2xl font-semibold leading-tight tracking-normal text-foreground sm:text-3xl">
             {service.name}
-          </h2>
+          </h3>
           <p className="max-w-xl text-[0.95rem] leading-7 text-muted-foreground">{service.description}</p>
         </div>
 

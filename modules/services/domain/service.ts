@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const serviceCategorySchema = z.enum(["facial", "massage", "body"]);
+export const serviceCategorySchema = z.enum(["facial", "scalp", "body", "weight-management", "hair-removal", "package"]);
 
 export const serviceSchema = z.object({
   id: z.string().min(1),

@@ -10,7 +10,7 @@ test("appointment submission accepts a preferred start time", () => {
   const parsed = createAppointmentInputSchema.parse({
     serviceId: "service_123",
     customerName: "Liu",
-    customerPhone: "(604) 555-0188",
+    customerPhone: "9293911865",
     customerEmail: "",
     preferredStartTime: "2026-07-20T18:30:00.000Z",
     notes: "Prefer a quiet room.",
@@ -21,7 +21,7 @@ test("appointment submission accepts a preferred start time", () => {
 });
 
 test("phone numbers are normalized for customer reuse", () => {
-  assert.equal(normalizePhone("(604) 555-0188"), "6045550188");
+  assert.equal(normalizePhone("9293911865"), "9293911865");
 });
 
 test("service duration still determines the internal legacy end time", () => {
@@ -35,13 +35,13 @@ test("overlapping preferred times are intentionally allowed by the domain model"
   const first = createAppointmentInputSchema.parse({
     serviceId: "service_123",
     customerName: "Liu",
-    customerPhone: "6045550188",
+    customerPhone: "9293911865",
     preferredStartTime: "2026-07-20T18:30:00.000Z",
   });
   const second = createAppointmentInputSchema.parse({
     serviceId: "service_123",
     customerName: "Chen",
-    customerPhone: "6045550199",
+    customerPhone: "9293911866",
     preferredStartTime: "2026-07-20T18:30:00.000Z",
   });
 

@@ -3,11 +3,11 @@ export const businessProfile = {
   tagline: "Facial care, massage, and quiet reset time in one local studio.",
   intro:
     "A small appointment-based beauty and massage studio offering calm service, simple scheduling, and bilingual-friendly care.",
-  address: "4309, Flushing, NY",
-  hoursSummary: "Open daily, 10:00 AM - 8:00 PM",
-  phone: "(604) 555-0188",
+  address: "3707三楼319 main st flushing 11354",
+  hoursSummary: "Open daily, 9:00 AM - 7:00 PM",
+  phone: "9293911865",
   wechat: "WeChat: MeiLanSpa",
-  mapLabel: "4309, Flushing, NY",
+  mapLabel: "3707三楼319 main st flushing 11354",
 };
 
 export const workShowcaseItems = [
@@ -41,7 +41,7 @@ export const bookingDates = [
   { value: "2026-07-12", label: "Sun, Jul 12" },
 ];
 
-export const availableTimes = ["10:00 AM", "11:30 AM", "1:00 PM", "2:30 PM", "4:00 PM", "6:30 PM"];
+export const availableTimes = ["9:00 AM", "10:30 AM", "12:00 PM", "1:30 PM", "3:00 PM", "4:30 PM", "6:00 PM"];
 
 export const trustHighlights = [
   "Clean treatment rooms",
