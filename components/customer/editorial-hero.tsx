@@ -48,7 +48,7 @@ export function EditorialHero() {
           </div>
           <div className="relative z-10 flex min-h-[640px] flex-col justify-between p-6 sm:min-h-[720px] sm:p-10 lg:min-h-full lg:p-14">
             <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.22em] text-white/70">
-              <span>{t.hero.brandPlaceholder}</span>
+              <span>{businessProfile.name}</span>
               <span className="hidden sm:inline">{t.hero.languageNote}</span>
             </div>
             <div className="max-w-2xl space-y-6 pb-4">

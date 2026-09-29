@@ -17,7 +17,6 @@ export function SiteHeader() {
     { href: "/", label: t.nav.home },
     { href: "/services", label: t.nav.services },
     { href: "/contact", label: t.nav.contact },
-    { href: "/admin", label: "店主管理" },
   ];
   const menuGroups = [
     {
@@ -48,7 +47,6 @@ export function SiteHeader() {
       links: [
         { href: `tel:${businessProfile.phone}`, label: t.nav.callStudio, ariaLabel: t.nav.callStudio },
         { href: "/book/confirmation", label: t.nav.confirmation, ariaLabel: t.nav.confirmation },
-        { href: "/admin", label: "店主管理", ariaLabel: "店主管理" },
       ],
     },
   ];

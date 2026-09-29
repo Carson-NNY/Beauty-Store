@@ -36,7 +36,6 @@ export const languageDictionary = {
       switchLanguage: "Switch to English",
     },
     hero: {
-      brandPlaceholder: "[店名 Placeholder]",
       languageNote: "中文 / English",
       eyebrow: "预约制专业护理",
       headline: "放松身心 · 美容护理",
@@ -180,7 +179,6 @@ export const languageDictionary = {
       switchLanguage: "切换到中文",
     },
     hero: {
-      brandPlaceholder: "[店名 Placeholder]",
       languageNote: "中文 / English",
       eyebrow: "Premium appointment care",
       headline: "RELAXATION & BEAUTY CARE",
