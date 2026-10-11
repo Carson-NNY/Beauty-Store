@@ -17,7 +17,7 @@ export function SiteFooter() {
         </div>
         <div className="space-y-2">
           <p className="font-medium text-foreground">{t.nav.visit}</p>
-          <p>{businessProfile.address}</p>
+          <p className="uppercase">{businessProfile.address}</p>
           <p>{businessProfile.hoursSummary}</p>
         </div>
         <div className="space-y-2">

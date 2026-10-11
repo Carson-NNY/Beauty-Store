@@ -58,7 +58,7 @@ export function SiteHeader() {
           <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-sm text-primary-foreground">
             ML
           </span>
-          <span>{businessProfile.name}</span>
+          <span className="hidden sm:inline">{businessProfile.name}</span>
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
           {navItems.map((item) => (
@@ -75,6 +75,7 @@ export function SiteHeader() {
           {t.nav.bookNow}
         </PendingLinkButton>
         <div className="flex items-center gap-2 sm:hidden">
+          <LanguageToggle className="border border-border bg-card px-3 shadow-sm" />
           <Button asChild size="icon" variant="ghost" aria-label={t.nav.callStudio}>
             <a href={`tel:${businessProfile.phone}`}>
               <Phone className="h-5 w-5" aria-hidden="true" />
@@ -104,7 +105,6 @@ export function SiteHeader() {
             className="container grid gap-2 border-t border-border/70 pb-4 pt-3"
             aria-hidden={!menuOpen}
           >
-            <LanguageToggle className="justify-self-start bg-card/80" />
             {menuGroups.map((group, index) => {
               const Icon = group.icon;
 

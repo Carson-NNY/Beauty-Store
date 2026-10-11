@@ -40,7 +40,7 @@ export const languageDictionary = {
       eyebrow: "预约制专业护理",
       headline: "放松身心 · 美容护理",
       subheadline: "为你定制按摩与美容护理，帮助你恢复轻松、平衡与被照顾的感觉。",
-      locationLine: "San Jose, CA · 预约制 · 中文 / English",
+      locationLine: "Flushing, NY · 预约制 · 中文 / English",
       imageAlt: "温暖安静的护理室细节",
     },
     home: {
@@ -183,7 +183,7 @@ export const languageDictionary = {
       eyebrow: "Premium appointment care",
       headline: "RELAXATION & BEAUTY CARE",
       subheadline: "Personalized massage and beauty treatments designed to help you feel renewed, balanced, and cared for.",
-      locationLine: "San Jose, CA · By appointment · 中文 / English",
+      locationLine: "Flushing, NY · By appointment · 中文 / English",
       imageAlt: "Dimly lit spa treatment detail with warm towels and botanical care",
     },
     home: {
